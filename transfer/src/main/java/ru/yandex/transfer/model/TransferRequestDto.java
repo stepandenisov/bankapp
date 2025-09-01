@@ -6,6 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class TransferRequestDto {
-    private TransferRequest transferRequest;
+    private ExternalTransferRequest transferRequest;
     private String token;
 }

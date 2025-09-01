@@ -1,7 +1,7 @@
 package ru.yandex.account.model.dto;
 
-import ru.yandex.account.model.AccountType;
+import ru.yandex.account.model.Currency;
 
 
-public record AccountDto(AccountType type, Double reminder) {
+public record AccountDto(Currency type) {
 }

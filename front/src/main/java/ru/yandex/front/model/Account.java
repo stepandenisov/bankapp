@@ -1,4 +1,4 @@
-package ru.yandex.transfer.model;
+package ru.yandex.front.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ExchangeResponse {
+public class Account {
+
+    private Long id;
+
     private Currency currency;
-    private Double value;
+
+    private Double reminder;
+
 }

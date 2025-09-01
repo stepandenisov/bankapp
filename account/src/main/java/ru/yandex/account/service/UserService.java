@@ -12,6 +12,8 @@ import ru.yandex.account.model.User;
 import ru.yandex.account.model.dto.EditUserInfoRequest;
 import ru.yandex.account.model.dto.UserDto;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
@@ -46,7 +48,13 @@ public class UserService implements UserDetailsService {
 
     public UserDto getCurrentUserDto() {
         User user = getCurrentUser();
-        return new UserDto(user.getUsername(), user.getFullName(), user.getBirthday());
+        return new UserDto(user.getId(), user.getUsername(), user.getFullName(), user.getBirthday());
+    }
+
+    public List<UserDto> getUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserDto(user.getId(), user.getUsername(), user.getFullName(), user.getBirthday()))
+                .toList();
     }
 
     public boolean existsByUsername(String username) {

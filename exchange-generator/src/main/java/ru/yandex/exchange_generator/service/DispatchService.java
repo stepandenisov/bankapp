@@ -7,9 +7,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.yandex.exchange_generator.model.Currency;
+import ru.yandex.exchange_generator.model.Exchange;
 import ru.yandex.exchange_generator.model.ExchangeRateRequest;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,11 +25,9 @@ public class DispatchService {
 
     @Scheduled(fixedRate = 1000)
     public void sendExchangeRate() {
-        Map<Currency, Double> rate = Arrays.stream(Currency.values()).
-                collect(Collectors.toMap(
-                        currency -> currency,
-                        generationService::generateForCurrency
-                ));
+        List<Exchange> rate = Arrays.stream(Currency.values()).
+                map(currency -> new Exchange(currency, generationService.generateForCurrency(currency)))
+                .toList();
 
         ExchangeRateRequest request = new ExchangeRateRequest(rate);
         HttpEntity<ExchangeRateRequest> requestEntity = new HttpEntity<>(request);

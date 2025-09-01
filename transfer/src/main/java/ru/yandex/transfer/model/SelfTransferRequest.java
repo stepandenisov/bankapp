@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class TransferRequest {
+public class SelfTransferRequest {
 
     private Long fromAccountId;
     private Long toAccountId;

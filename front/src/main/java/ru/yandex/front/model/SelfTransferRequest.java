@@ -1,13 +1,17 @@
-package ru.yandex.exchange.model;
+package ru.yandex.front.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-public class ExchangeResponse {
-    private Currency currency;
+@Data
+public class SelfTransferRequest {
+
+    private Long fromAccountId;
+    private Long toAccountId;
     private Double amount;
+
 }

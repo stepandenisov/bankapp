@@ -1,10 +1,10 @@
 package ru.yandex.account.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.account.model.AccountType;
+import ru.yandex.account.model.Account;
+import ru.yandex.account.model.Currency;
 import ru.yandex.account.model.dto.AccountDto;
 import ru.yandex.account.model.dto.CashRequest;
 import ru.yandex.account.service.AccountService;
@@ -20,22 +20,32 @@ public class AccountController {
     private final AccountService accountService;
 
     @GetMapping(path = {"/", ""})
-    public ResponseEntity<List<AccountDto>> findAccounts() {
+    public ResponseEntity<List<Account>> findAccounts() {
         return ResponseEntity.ok(accountService.findAccountsDtoOfCurrentUser());
     }
 
-    @GetMapping(path = {"/{id}/currency"})
-    public ResponseEntity<AccountType> currency(@PathVariable("id") Long accountId){
-        return ResponseEntity.ok(accountService.getCurrencyOfAccountById(accountId));
+    @GetMapping(path = "/findAccountId")
+    public ResponseEntity<Long> accountId(@RequestParam(value = "userId") Long userId,
+                                          @RequestParam("currency") Currency currency) {
+        return ResponseEntity.ok(accountService.getAccountIdByCurrencyAndUserId(currency, userId));
     }
 
     @PostMapping(path = {"/", ""})
-    public ResponseEntity<?> addAccount(@RequestBody AccountDto request) throws BadRequestException {
+    public ResponseEntity<?> addAccount(@RequestBody AccountDto request) {
         if (accountService.existsByAccountType(request.type())) {
             return ResponseEntity.badRequest().body("Валютный счет (" + request.type() + ") уже существует.");
         }
         accountService.save(request);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping(path = "/{id}")
+    public ResponseEntity<?> deleteAccount(@PathVariable("id") Long accountId) throws AccessDeniedException {
+        if (accountService.delete(accountId)) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping(path = {"/{id}/withdraw"})
@@ -55,7 +65,7 @@ public class AccountController {
     }
 
 //    @PostMapping(path = {"/{id}/top-up"})
-//    public ResponseEntity<?> topUpForUser(@PathVariable("type") AccountType type, @PathVariable("id") Long id, @RequestBody CashRequest cashRequest) throws AccessDeniedException {
+//    public ResponseEntity<?> topUpForUser(@PathVariable("type") Currency type, @PathVariable("id") Long id, @RequestBody CashRequest cashRequest) throws AccessDeniedException {
 //        if (accountService.topUpForUser(id, type, cashRequest.getAmount())) {
 //            return ResponseEntity.ok().build();
 //        }

@@ -13,8 +13,8 @@ create table if not exists account.users
 create table if not exists account.accounts
 (
     id bigserial primary key,
-    account_type varchar(64) check (accounts.account_type in ('RUB', 'USD', 'CNY')) not null,
+    currency varchar(64) check (accounts.currency in ('RUB', 'USD', 'CNY')) not null,
     user_id bigint not null references account.users(id),
     reminder numeric not null,
-    constraint unique_user_account_type unique (user_id, account_type)
+    constraint unique_user_account_type unique (user_id, currency)
 )

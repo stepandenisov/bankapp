@@ -3,7 +3,7 @@ package ru.yandex.account.dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.yandex.account.model.Account;
-import ru.yandex.account.model.AccountType;
+import ru.yandex.account.model.Currency;
 import ru.yandex.account.model.User;
 
 import java.util.List;
@@ -15,5 +15,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByIdAndUser(Long id, User user);
 
-    boolean existsByUserIdAndAccountType(Long userId, AccountType type);
+    boolean existsByUserIdAndCurrency(Long userId, Currency type);
+
+    Optional<Account> findByUserIdAndCurrency(Long userId, Currency currency);
 }

@@ -7,7 +7,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ExchangeResponse {
-    private Currency currency;
-    private Double value;
+public class ExternalTransferRequest {
+
+    private Long userId;
+    private Long fromAccountId;
+    private Currency toCurrency;
+    private Double amount;
+
 }

@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.exchange.model.Currency;
 import ru.yandex.exchange.model.ExchangeRateRequest;
 import ru.yandex.exchange.model.ExchangeRateResponse;
-import ru.yandex.exchange.model.ExchangeResponse;
+import ru.yandex.exchange.model.Exchange;
 import ru.yandex.exchange.service.ExchangeRateService;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,20 +20,25 @@ public class ExchangeRateController {
 
     @PostMapping(path = {"/", ""})
     public void setExchangeRate(@RequestBody ExchangeRateRequest request) {
-        exchangeRateService.setRate(request.getExchangeRate());
+        exchangeRateService.setRates(request.getExchangeRate());
     }
 
     @GetMapping(path = "/convert")
-    public ResponseEntity<ExchangeResponse> getExchangeInfo(@RequestParam("from") Currency from,
-                                                            @RequestParam("to") Currency to,
-                                                            @RequestParam("amount") Double amount) {
+    public ResponseEntity<Exchange> getExchangeInfo(@RequestParam("from") Currency from,
+                                                    @RequestParam("to") Currency to,
+                                                    @RequestParam("amount") Double amount) {
         Double convertedAmount = exchangeRateService.convert(from, to, amount);
-        return ResponseEntity.ok(new ExchangeResponse(to, convertedAmount));
+        return ResponseEntity.ok(new Exchange(to, convertedAmount));
     }
 
     @GetMapping(path = {"/", ""})
     public ResponseEntity<ExchangeRateResponse> getExchangeRate() {
-        return ResponseEntity.ok(new ExchangeRateResponse(exchangeRateService.getRate()));
+        return ResponseEntity.ok(new ExchangeRateResponse(exchangeRateService.getRates()));
+    }
+
+    @GetMapping(path = {"/currencies"})
+    public ResponseEntity<List<Currency>> getCurrencies() {
+        return ResponseEntity.ok(List.of(Currency.values()));
     }
 
 }

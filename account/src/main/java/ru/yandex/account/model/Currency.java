@@ -2,13 +2,13 @@ package ru.yandex.account.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-public enum AccountType {
+public enum Currency {
     RUB,
     USD,
     CNY;
 
     @JsonCreator
-    public static AccountType fromString(String value) {
-        return AccountType.valueOf(value.toUpperCase());
+    public static Currency fromString(String value) {
+        return Currency.valueOf(value.toUpperCase());
     }
 }

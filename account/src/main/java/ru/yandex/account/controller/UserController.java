@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.account.model.User;
 import ru.yandex.account.model.dto.EditPasswordRequest;
 import ru.yandex.account.model.dto.EditUserInfoRequest;
 import ru.yandex.account.model.dto.UserDto;
 import ru.yandex.account.service.UserService;
 
+import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -23,13 +25,18 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentUserDto());
     }
 
+    @GetMapping(path = "/all")
+    public ResponseEntity<List<UserDto>> getUsers(){
+        return ResponseEntity.ok(userService.getUsers());
+    }
+
     @DeleteMapping(path = {"/", ""})
     public ResponseEntity<?> deleteUser(){
         userService.deleteCurrentUser();
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping(path = {"/password"})
+    @PostMapping(path = {"/password"})
     public ResponseEntity<?> editPassword(@RequestBody EditPasswordRequest request){
         if(!Objects.equals(request.getPassword(), request.getConfirmPassword())){
             return ResponseEntity
@@ -40,7 +47,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping(path = {"/info"})
+    @PostMapping(path = {"/info"})
     public ResponseEntity<?> editUserInfo(@RequestBody EditUserInfoRequest request){
         userService.editUser(request);
         return ResponseEntity.ok().build();

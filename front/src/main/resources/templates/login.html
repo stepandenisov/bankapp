@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<h2>Вход в систему</h2>
+<form id="login-form">
+    <label for="username">Логин:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="password">Пароль:</label><br>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <button type="submit">Войти</button>
+</form>
+
+<p id="message" style="color: red;"></p>
+
+<script>
+    const form = document.getElementById('login-form');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const payload = {
+            username: form.username.value,
+            password: form.password.value
+        };
+
+        try {
+            const response = await fetch('http://localhost:8081/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const token = data.token || data.access_token;
+
+                localStorage.setItem('token', token);
+
+                window.location.href = '/dashboard.html';
+            } else {
+                const err = await response.text();
+                message.textContent = 'Ошибка входа: ' + err;
+            }
+        } catch (err) {
+            message.textContent = 'Ошибка сети или сервера: ' + err.message;
+        }
+    });
+</script>
+</body>
+</html>

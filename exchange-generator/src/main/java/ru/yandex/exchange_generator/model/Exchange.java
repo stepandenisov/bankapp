@@ -4,13 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ExchangeRateRequest {
-
-    private List<Exchange> exchangeRate;
-
+public class Exchange {
+    private Currency currency;
+    private Double value;
 }

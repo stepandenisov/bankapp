@@ -1,4 +1,4 @@
-package ru.yandex.transfer.configuration;
+package ru.yandex.front.configuration;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -8,10 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.yandex.transfer.service.JwtService;
+import ru.yandex.front.service.JwtService;
 
 import java.io.IOException;
 import java.util.List;

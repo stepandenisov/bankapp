@@ -4,11 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 public class ExchangeRateResponse {
-    private Map<Currency, Double> rate;
+    private List<Exchange> rate;
 }
