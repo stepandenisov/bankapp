@@ -1,5 +1,6 @@
 package ru.yandex.account.service;
 
+import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,9 @@ import ru.yandex.account.model.User;
 import ru.yandex.account.model.dto.EditUserInfoRequest;
 import ru.yandex.account.model.dto.UserDto;
 
+import java.nio.CharBuffer;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 
 @Service
@@ -82,6 +86,10 @@ public class UserService implements UserDetailsService {
     public void editUser(EditUserInfoRequest userInfoDto){
         User user = getCurrentUser();
         user.setFullName(userInfoDto.getFullName());
+        if (Period.between(userInfoDto.getBirthday(), LocalDate.now()).getYears() < 18){
+            notificationService.send("Ошибка обновления данных: возраст меньше 18 лет.");
+            throw new BadRequestException("Возраст меньше 18 лет.");
+        }
         user.setBirthday(userInfoDto.getBirthday());
         userRepository.save(user);
         notificationService.send("Данные изменены.");

@@ -1,4 +1,4 @@
-package ru.yandex.account.service;
+package ru.yandex.cash.service;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -9,7 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.yandex.account.model.dto.NotificationRequest;
+import ru.yandex.cash.model.NotificationRequest;
 
 import java.util.function.Supplier;
 
@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 public class NotificationService {
 
     private final RestTemplate restTemplate;
+
 
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;

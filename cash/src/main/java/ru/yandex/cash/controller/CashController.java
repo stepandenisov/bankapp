@@ -19,12 +19,8 @@ public class CashController {
 
     @PostMapping("/withdraw/{id}")
     public ResponseEntity<?> withdraw(@PathVariable(name = "id") Long id,
-                                      @RequestBody CashRequest cashRequest,
-                                      Authentication authentication){
-        RequestSpecificInfo requestSpecificInfo = new RequestSpecificInfo(id,
-                cashRequest,
-                authentication.getCredentials().toString());
-        if (cashService.withdraw(requestSpecificInfo)){
+                                      @RequestBody CashRequest cashRequest){
+        if (cashService.withdraw(id, cashRequest)){
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();
@@ -32,12 +28,8 @@ public class CashController {
 
     @PostMapping("/top-up/{id}")
     public ResponseEntity<?> topUp(@PathVariable(name = "id") Long id,
-                                   @RequestBody CashRequest cashRequest,
-                                   Authentication authentication) {
-        RequestSpecificInfo requestSpecificInfo = new RequestSpecificInfo(id,
-                cashRequest,
-                authentication.getCredentials().toString());
-        if (cashService.topUp(requestSpecificInfo)) {
+                                   @RequestBody CashRequest cashRequest) {
+        if (cashService.topUp(id, cashRequest)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().build();

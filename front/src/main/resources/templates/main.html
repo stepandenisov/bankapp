@@ -3,10 +3,87 @@
 
 <head>
     <title>Корзина товаров</title>
+    <style>
+        .custom-toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 16px;
+
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 9999;
+        }
+
+        .custom-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    </style>
+    <script>
+        const eventSource = new EventSource("/sse/notifications");
+
+        eventSource.addEventListener("notification", function (event) {
+            const data = JSON.parse(event.data);
+            sessionStorage.setItem("toastMessage", data.message);
+            showToast(data.message);
+        });
+
+        eventSource.onerror = function (err) {
+            console.error("SSE error", err);
+        };
+
+        function showToast(message, duration = 5000) {
+            const toast = document.createElement('div');
+            toast.className = 'custom-toast';
+            toast.innerHTML = `
+            <div class="toast">
+                <div class="toast-header">
+                    <strong>Уведомление</strong>
+                    <button class="close-btn" aria-label="Закрыть">&times;</button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            const timeoutId = setTimeout(() => removeToast(), duration);
+
+            toast.querySelector('.close-btn').addEventListener('click', () => {
+                clearTimeout(timeoutId);
+                removeToast();
+            });
+
+            function removeToast() {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => {
+                    toast.remove();
+                }, { once: true });
+            }
+        }
+    </script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            const message = sessionStorage.getItem("toastMessage");
+            if (message) {
+                showToast(message);
+                sessionStorage.removeItem("toastMessage");
+            }
+        });
+    </script>
     <script language="JavaScript">
         setInterval(() => {
             var td = document.getElementById('exchange_rates');
-            fetch('http://localhost:8080/exchange/rate',{
+            fetch('http://localhost:8080/exchange/rate', {
                 method: 'GET',
                 mode: 'cors'
             })
@@ -133,7 +210,7 @@
     </tr>
     <tr>
         <td style="padding:2px;">
-            <form method="post" th:action="${'/user/cash'}">
+            <form method="post" th:action="${'/cash'}" enctype="multipart/form-data">
                 <table style="width:100%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
                     <tr th:if="${cashErrors!=null}" th:each="cashError : ${cashErrors}">
                         <td style="color:red;" th:text="${cashError}"/>
@@ -142,13 +219,13 @@
                         <td style="font-weight:bold;">Наличные</td>
                         <td>
                             Валюта
-                            <select name="currency">
-                                <option th:each="eachCurrency : ${userCurrency}" th:value="${eachCurrency.name()}"
-                                        th:text="${eachCurrency.name()}"/>
+                            <select name="accountId">
+                                <option th:each="account : ${accounts}" th:value="${account.getId()}"
+                                        th:text="${account.getCurrency().name()}"/>
                             </select>
                         </td>
                         <td>
-                            <input name="value" type="number" style="width:100%" required/>
+                            <input name="volume" type="number" style="width:100%" required/>
                         </td>
                         <td>
                         <td style="text-align:right">

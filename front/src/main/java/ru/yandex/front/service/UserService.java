@@ -1,15 +1,18 @@
 package ru.yandex.front.service;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.yandex.front.model.EditPasswordRequest;
-import ru.yandex.front.model.EditUserInfoRequest;
-import ru.yandex.front.model.UserDto;
+import ru.yandex.front.model.*;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -17,46 +20,101 @@ public class UserService {
 
     private final RestTemplate restTemplate;
 
-    public boolean editPassword(EditPasswordRequest request) {
+    private final CircuitBreakerRegistry cbRegistry;
+    private final RetryRegistry retryRegistry;
 
-        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<EditPasswordRequest> entity = new HttpEntity<>(request, headers);
-        return restTemplate.exchange("http://account/user/password",
-                HttpMethod.POST,
-                entity,
-                Void.class).getStatusCode() == HttpStatus.OK;
+    public void editPassword(EditPasswordRequest request) {
+        CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
+        Retry retry = retryRegistry.retry("accountApi");
+
+        Supplier<Void> supplier = () -> {
+            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<EditPasswordRequest> entity = new HttpEntity<>(request, headers);
+
+            restTemplate.exchange("http://account/user/password", HttpMethod.POST, entity, Void.class);
+            return null;
+        };
+
+        Supplier<Void> protectedCall = CircuitBreaker.decorateSupplier(cb,
+                Retry.decorateSupplier(retry, supplier));
+
+        try {
+            protectedCall.get();
+        } catch (Exception ignored) {
+        }
     }
 
-    public boolean editInfo(EditUserInfoRequest request) {
+    public void editInfo(EditUserInfoRequest request) {
+        CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
+        Retry retry = retryRegistry.retry("accountApi");
 
-        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+        Supplier<Void> supplier = () -> {
+            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<EditUserInfoRequest> entity = new HttpEntity<>(request, headers);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<EditUserInfoRequest> entity = new HttpEntity<>(request, headers);
-        return restTemplate.exchange("http://account/user/info",
-                HttpMethod.POST,
-                entity,
-                Void.class).getStatusCode() == HttpStatus.OK;
+            restTemplate.exchange("http://account/user/info", HttpMethod.POST, entity, Void.class);
+            return null;
+        };
+
+        Supplier<Void> protectedCall = CircuitBreaker.decorateSupplier(cb,
+                Retry.decorateSupplier(retry, supplier));
+
+        try {
+            protectedCall.get();
+        } catch (Exception ignored) {
+        }
+    }
+
+    public void register(RegisterRequest request) {
+        CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
+        Retry retry = retryRegistry.retry("accountApi");
+
+        Supplier<Void> supplier = () -> {
+            HttpEntity<RegisterRequest> entity = new HttpEntity<>(request);
+            restTemplate.exchange("http://account/auth/register", HttpMethod.POST, entity, Void.class);
+            return null;
+        };
+
+        Supplier<Void> protectedCall = CircuitBreaker.decorateSupplier(cb,
+                Retry.decorateSupplier(retry, supplier));
+
+        try {
+            protectedCall.get();
+        } catch (Exception ignored) {
+        }
     }
 
     public List<UserDto> getUsers() {
+        CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
+        Retry retry = retryRegistry.retry("accountApi");
 
-        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+        Supplier<List<UserDto>> supplier = () -> {
+            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Object> entity = new HttpEntity<>(headers);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Object> entity = new HttpEntity<>(headers);
-        return List.of(restTemplate.exchange("http://account/user/all",
-                HttpMethod.GET,
-                entity,
-                UserDto[].class).getBody());
+            UserDto[] response = restTemplate.exchange("http://account/user/all", HttpMethod.GET, entity, UserDto[].class).getBody();
+            return response != null ? List.of(response) : List.of();
+        };
+
+        Supplier<List<UserDto>> protectedCall = CircuitBreaker.decorateSupplier(cb,
+                Retry.decorateSupplier(retry, supplier));
+
+        try {
+            return protectedCall.get();
+        } catch (Exception e) {
+            return List.of();
+        }
     }
+
 
 }

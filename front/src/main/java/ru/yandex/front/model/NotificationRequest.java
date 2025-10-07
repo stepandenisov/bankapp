@@ -1,4 +1,4 @@
-package ru.yandex.cash.model;
+package ru.yandex.front.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class RequestSpecificInfo {
-    private Long accountId;
-    private CashRequest cashRequest;
+public class NotificationRequest {
+    private String message;
 }

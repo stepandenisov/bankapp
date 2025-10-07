@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class RequestSpecificInfo {
-    private Long accountId;
-    private CashRequest cashRequest;
+public class NotificationRequest {
+    private String message;
 }

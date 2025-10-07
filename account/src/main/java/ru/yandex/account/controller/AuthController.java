@@ -48,7 +48,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         if (userService.existsByUsername(request.getUsername())) {
             return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
+                    .status(HttpStatus.BAD_REQUEST)
                     .body("Пользователь с таким логином уже существует");
         }
 

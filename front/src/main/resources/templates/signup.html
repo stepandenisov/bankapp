@@ -6,7 +6,7 @@
 </head>
 
 <body>
-<form th:action="${'/signup'}" method="post">
+<form th:action="${'/user/register'}" method="post" enctype="multipart/form-data">
 <table style="width:30%;margin-left:auto;margin-right:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">
     <tr>
         <td colspan="2">
@@ -19,7 +19,7 @@
     <tr>
         <td style="font-weight:bold;">Логин</td>
         <td>
-            <input name="login" type="text" th:value="${login}" style="width:100%" required/>
+            <input name="username" type="text" th:value="${username}" style="width:100%" required/>
         </td>
     </tr>
     <tr>
@@ -31,19 +31,19 @@
     <tr>
         <td style="font-weight:bold;">Повторите пароль</td>
         <td>
-            <input name="confirm_password" type="password" style="width:100%" required/>
+            <input name="confirmPassword" type="password" style="width:100%" required/>
         </td>
     </tr>
     <tr>
         <td style="font-weight:bold;">Фамилия Имя</td>
         <td>
-            <input name="name" type="text" th:value="${name}" style="width:100%" required/>
+            <input name="fullName" type="text" th:value="${fullName}" style="width:100%" required/>
         </td>
     </tr>
     <tr>
         <td style="font-weight:bold;">Дата рождения </td>
         <td>
-            <input name="birthdate" type="date" th:value="${birthdate}" style="width:100%" required/>
+            <input name="birthday" type="date" th:value="${birthday}" style="width:100%" required/>
         </td>
     </tr>
     <tr>

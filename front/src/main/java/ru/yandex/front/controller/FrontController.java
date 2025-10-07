@@ -37,7 +37,7 @@ public class FrontController {
         return "main";
     }
 
-    @GetMapping("/signup")
+    @GetMapping("/register")
     public String signup() {
         return "signup";
     }
