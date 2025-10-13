@@ -75,17 +75,6 @@ public class AccountService {
                 .orElseThrow(() -> new AccessDeniedException("Нет доступа"));
     }
 
-//    public boolean topUpForUser(Long accountId, Double amount) throws AccessDeniedException {
-//        User user = userService.getCurrentUser();
-//        return accountRepository.findByIdAndUser(accountId, user)
-//                .map(account -> {
-//                    account.setReminder(account.getReminder() + amount);
-//                    accountRepository.save(account);
-//                    return true;
-//                })
-//                .orElseThrow(() -> new AccessDeniedException("Нет доступа"));
-//    }
-
     public boolean topUp(Long accountId, Double amount) throws AccessDeniedException {
         return accountRepository.findById(accountId)
                 .map(account -> {
@@ -95,15 +84,4 @@ public class AccountService {
                 })
                 .orElseThrow(() -> new AccessDeniedException("Нет доступа"));
     }
-
-//    public boolean topUpForUser(Long userId, Currency accountType, Double amount) throws AccessDeniedException {
-//        User user = userService.findUserById(userId);
-//        return accountRepository.findByIdAndUser(accountType, user)
-//                .map(account -> {
-//                    account.setReminder(account.getReminder() + amount);
-//                    accountRepository.save(account);
-//                    return true;
-//                })
-//                .orElseThrow(() -> new AccessDeniedException("Нет счета."));
-//    }
 }

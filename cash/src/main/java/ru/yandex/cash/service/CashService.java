@@ -41,7 +41,7 @@ public class CashService {
             Supplier<Boolean> callSupplier = () -> {
                 String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", "Bearer " + token);
+                headers.set("Authorization", "Jwt " + token);
                 headers.setContentType(MediaType.APPLICATION_JSON);
                 HttpEntity<CashRequest> requestEntity = new HttpEntity<>(cashRequest, headers);
 

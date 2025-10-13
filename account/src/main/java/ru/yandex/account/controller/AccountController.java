@@ -63,12 +63,4 @@ public class AccountController {
         }
         return ResponseEntity.badRequest().build();
     }
-
-//    @PostMapping(path = {"/{id}/top-up"})
-//    public ResponseEntity<?> topUpForUser(@PathVariable("type") Currency type, @PathVariable("id") Long id, @RequestBody CashRequest cashRequest) throws AccessDeniedException {
-//        if (accountService.topUpForUser(id, type, cashRequest.getAmount())) {
-//            return ResponseEntity.ok().build();
-//        }
-//        return ResponseEntity.badRequest().build();
-//    }
 }

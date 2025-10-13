@@ -44,7 +44,7 @@ public class TransferService {
 
         Supplier<Boolean> withdrawSupplier = () -> {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             restTemplate.exchange(
@@ -58,7 +58,7 @@ public class TransferService {
 
         Supplier<Boolean> topUpSupplier = () -> {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+//            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             restTemplate.exchange(
@@ -91,7 +91,7 @@ public class TransferService {
         } catch (Exception e) {
             Supplier<Boolean> revertTopUpSupplier = () -> {
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", "Bearer " + token);
+//                headers.set("Authorization", "Bearer " + token);
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
                 restTemplate.exchange(
@@ -156,7 +156,7 @@ public class TransferService {
 
         Supplier<List<Account>> accountsSupplier = () -> {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
@@ -234,7 +234,7 @@ public class TransferService {
                             "http://account/accounts/findAccountId?userId={userId}&currency={currency}",
                             HttpMethod.GET,
                             new HttpEntity<>(new HttpHeaders() {{
-                                set("Authorization", "Bearer " + token);
+                                set("Authorization", "Jwt " + token);
                                 setContentType(MediaType.APPLICATION_JSON);
                             }}),
                             Long.class,

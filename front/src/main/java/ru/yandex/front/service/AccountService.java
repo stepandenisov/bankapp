@@ -34,7 +34,7 @@ public class AccountService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
@@ -66,7 +66,7 @@ public class AccountService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<AddAccountRequest> entity = new HttpEntity<>(new AddAccountRequest(currency), headers);
 
@@ -96,7 +96,7 @@ public class AccountService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 

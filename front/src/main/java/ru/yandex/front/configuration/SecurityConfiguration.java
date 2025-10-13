@@ -38,6 +38,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/notification").permitAll()
                         .anyRequest().authenticated()
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> {})
+                )
                 .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
                 .authenticationProvider(new CustomAuthenticationProvider(restTemplate))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService),

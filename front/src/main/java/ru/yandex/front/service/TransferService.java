@@ -34,7 +34,7 @@ public class TransferService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<SelfTransferRequest> entity = new HttpEntity<>(request, headers);
 
@@ -64,7 +64,7 @@ public class TransferService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<ExternalTransferRequest> entity = new HttpEntity<>(request, headers);
 

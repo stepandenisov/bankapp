@@ -33,7 +33,7 @@ public class CashService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<CashRequest> entity = new HttpEntity<>(new CashRequest(volume), headers);
 
@@ -63,7 +63,7 @@ public class CashService {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<CashRequest> entity = new HttpEntity<>(new CashRequest(volume), headers);
 

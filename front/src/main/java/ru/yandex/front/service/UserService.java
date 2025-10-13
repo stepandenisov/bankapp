@@ -31,7 +31,7 @@ public class UserService {
         Supplier<Void> supplier = () -> {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<EditPasswordRequest> entity = new HttpEntity<>(request, headers);
 
@@ -55,7 +55,7 @@ public class UserService {
         Supplier<Void> supplier = () -> {
             String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+            headers.set("Authorization", "Jwt " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<EditUserInfoRequest> entity = new HttpEntity<>(request, headers);
 
@@ -96,9 +96,9 @@ public class UserService {
         Retry retry = retryRegistry.retry("accountApi");
 
         Supplier<List<UserDto>> supplier = () -> {
-            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+//            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+//            headers.set("Authorization", "Bearer " + token);
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
