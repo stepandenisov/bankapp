@@ -2,12 +2,14 @@ package ru.yandex.account.service;
 
 import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.account.dao.UserRepository;
 import ru.yandex.account.model.User;
 import ru.yandex.account.model.dto.EditUserInfoRequest;
@@ -88,7 +90,7 @@ public class UserService implements UserDetailsService {
         user.setFullName(userInfoDto.getFullName());
         if (Period.between(userInfoDto.getBirthday(), LocalDate.now()).getYears() < 18){
             notificationService.send("Ошибка обновления данных: возраст меньше 18 лет.");
-            throw new BadRequestException("Возраст меньше 18 лет.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Возраст меньше 18 лет");
         }
         user.setBirthday(userInfoDto.getBirthday());
         userRepository.save(user);

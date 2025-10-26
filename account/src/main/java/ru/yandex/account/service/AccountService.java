@@ -3,7 +3,9 @@ package ru.yandex.account.service;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.account.dao.AccountRepository;
 import ru.yandex.account.model.Account;
 import ru.yandex.account.model.Currency;
@@ -54,7 +56,7 @@ public class AccountService {
     public Long getAccountIdByCurrencyAndUserId(Currency currency, Long userId){
         return accountRepository.findByUserIdAndCurrency(userId, currency)
                 .map(Account::getId)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
 
     public List<Account> findAccountsDtoOfCurrentUser() {

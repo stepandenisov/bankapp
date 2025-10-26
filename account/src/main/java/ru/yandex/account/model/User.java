@@ -1,10 +1,8 @@
 package ru.yandex.account.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +17,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Getter
+    @Setter
     private String username;
     @Getter
     @Setter
@@ -32,9 +31,10 @@ public class User {
     @Setter
     private LocalDate birthday;
 
+    @Setter
     private String roles;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Account> accounts;
 
     public String[] getRoles(){

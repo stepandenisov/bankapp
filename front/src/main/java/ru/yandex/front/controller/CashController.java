@@ -19,7 +19,7 @@ public class CashController {
     private final CashService cashService;
 
     @PostMapping(value = {"/", ""}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String withdraw(@RequestParam Long accountId, @RequestParam Double volume, @RequestParam Action action){
+    public String withdraw(@RequestParam("accountId") Long accountId, @RequestParam("volume") Double volume, @RequestParam("action") Action action){
         switch (action){
             case PUT -> cashService.topUp(accountId, volume);
             case GET -> cashService.withdraw(accountId, volume);

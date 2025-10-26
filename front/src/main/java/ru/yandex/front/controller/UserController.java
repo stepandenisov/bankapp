@@ -20,24 +20,24 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping(path = "/register", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public String register(@RequestParam String username,
-                         @RequestParam String password,
-                         @RequestParam String confirmPassword,
-                         @RequestParam String fullName,
-                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthday){
+    public String register(@RequestParam("username") String username,
+                         @RequestParam("password") String password,
+                         @RequestParam("confirmPassword") String confirmPassword,
+                         @RequestParam("fullName") String fullName,
+                         @RequestParam("birthday") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthday){
         userService.register(new RegisterRequest(username, password, confirmPassword, fullName, birthday));
         return "redirect:/";
     }
 
     @PostMapping(path = "/password", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public String editPassword(@RequestPart String password, @RequestPart String confirmPassword) {
+    public String editPassword(@RequestParam("password") String password, @RequestParam("confirmPassword") String confirmPassword) {
         userService.editPassword(new EditPasswordRequest(password, confirmPassword));
 
         return "redirect:/";
     }
 
     @PostMapping(path = "/info", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public String editInfo(@RequestParam String name, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthday) {
+    public String editInfo(@RequestParam("name") String name, @RequestParam("birthday") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate birthday) {
         userService.editInfo(new EditUserInfoRequest(name, birthday));
         return "redirect:/";
     }
