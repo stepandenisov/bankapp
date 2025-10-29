@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,9 @@ public class CashService {
 
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
+
+    @Value("${account.uri}")
+    private String accountUri = "http://accounts/";
 
     private boolean changeAccountReminder(String uri, CashRequest cashRequest) {
         if (blockerService.checkSuspicious()) {
@@ -68,10 +72,10 @@ public class CashService {
 
 
     public boolean withdraw(Long accountId, CashRequest cashRequest) {
-        return changeAccountReminder("http://account/accounts/" + accountId + "/withdraw", cashRequest);
+        return changeAccountReminder(accountUri + "accounts/" + accountId + "/withdraw", cashRequest);
     }
 
     public boolean topUp(Long accountId, CashRequest cashRequest) {
-        return changeAccountReminder("http://account/accounts/" + accountId + "/top-up", cashRequest);
+        return changeAccountReminder(accountUri + "accounts/" + accountId + "/top-up", cashRequest);
     }
 }

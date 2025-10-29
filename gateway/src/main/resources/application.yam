@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: ${spring.application.name}
+    non-secure-port: 8080
+
+spring:
+  application:
+    name: gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        - id: exchange
+          uri: lb://exchange
+          predicates:
+            - Path=/exchange/**
+          filters:
+            - name: RewritePath
+              args:
+                regexp: /exchange/(?<path>.*)
+                replacement: /${path}

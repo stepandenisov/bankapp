@@ -10,7 +10,7 @@ Contract.make {
             queryParameters {
                 parameter("from", "USD")
                 parameter("to", "RUB")
-                parameter("amount", "100")
+                parameter("amount", "100.0")
             }
         }
     }

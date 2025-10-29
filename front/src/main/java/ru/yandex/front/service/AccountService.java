@@ -6,6 +6,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class AccountService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${account.uri}")
+    private String accountUri;
+
     public List<Account> getAccounts() {
         CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
         Retry retry = retryRegistry.retry("accountApi");
@@ -39,7 +43,7 @@ public class AccountService {
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
             Account[] body = restTemplate.exchange(
-                    "http://account/accounts/",
+                    accountUri +"/accounts",
                     HttpMethod.GET,
                     entity,
                     Account[].class
@@ -71,7 +75,7 @@ public class AccountService {
             HttpEntity<AddAccountRequest> entity = new HttpEntity<>(new AddAccountRequest(currency), headers);
 
             restTemplate.exchange(
-                    "http://account/accounts/",
+                    accountUri + "/accounts",
                     HttpMethod.POST,
                     entity,
                     Void.class
@@ -101,7 +105,7 @@ public class AccountService {
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
             restTemplate.exchange(
-                    "http://account/accounts/" + accountId,
+                    accountUri + "/accounts/" + accountId,
                     HttpMethod.DELETE,
                     entity,
                     Void.class

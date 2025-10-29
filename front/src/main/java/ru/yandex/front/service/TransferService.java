@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -26,6 +27,9 @@ public class TransferService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${transfer.uri}")
+    private String transferUri;
+
     public void selfTransfer(SelfTransferRequest request) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("transferApi");
         Retry retry = retryRegistry.retry("transferApi");
@@ -39,7 +43,7 @@ public class TransferService {
             HttpEntity<SelfTransferRequest> entity = new HttpEntity<>(request, headers);
 
             restTemplate.exchange(
-                    "http://transfer/transfer/self",
+                    transferUri + "/transfer/self",
                     HttpMethod.POST,
                     entity,
                     Void.class
@@ -69,7 +73,7 @@ public class TransferService {
             HttpEntity<ExternalTransferRequest> entity = new HttpEntity<>(request, headers);
 
             restTemplate.exchange(
-                    "http://transfer/transfer/external",
+                    transferUri + "/transfer/external",
                     HttpMethod.POST,
                     entity,
                     Void.class

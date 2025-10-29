@@ -13,6 +13,7 @@ import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureM
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.transfer.TestSecurityConfig;
 import ru.yandex.transfer.model.ExternalTransferRequest;
 import ru.yandex.transfer.model.SelfTransferRequest;
 import ru.yandex.transfer.service.BlockerService;
@@ -20,14 +21,13 @@ import ru.yandex.transfer.service.NotificationService;
 import ru.yandex.transfer.service.TransferService;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
-@Import(StubSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 public abstract class BaseContractTest {
 
     @LocalServerPort

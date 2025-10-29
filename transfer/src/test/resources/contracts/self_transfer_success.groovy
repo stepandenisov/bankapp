@@ -12,7 +12,8 @@ Contract.make {
             contentType(applicationJson())
         }
         body(
-                account: "1",
+                fromAccountId: 1L,
+                toAccountId:2L,
                 amount: 50.0
         )
     }

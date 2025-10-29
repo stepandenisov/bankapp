@@ -1,4 +1,4 @@
-package ru.yandex.exchange.contract;
+package ru.yandex.exchange;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @Configuration
 @ActiveProfiles("test")
-public class StubSecurityConfig {
+public class TestSecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {

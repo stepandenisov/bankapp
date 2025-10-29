@@ -1,4 +1,4 @@
-package ru.yandex.notifications.contract;
+package ru.yandex.front;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
@@ -9,10 +9,11 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @ActiveProfiles("test")
-public class StubSecurityConfig {
+public class TestSecurityConfig {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
@@ -22,6 +23,11 @@ public class StubSecurityConfig {
     @Bean
     public OAuth2AuthorizedClientRepository oAuth2AuthorizedClientRepository(){
         return Mockito.mock(OAuth2AuthorizedClientRepository.class);
+    }
+
+    @Bean
+    public RestTemplate restTemplate(){
+        return new RestTemplate();
     }
 
     @Bean

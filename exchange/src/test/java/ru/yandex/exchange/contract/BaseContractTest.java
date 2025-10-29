@@ -10,12 +10,12 @@ import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureM
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.exchange.TestSecurityConfig;
 import ru.yandex.exchange.model.Currency;
 import ru.yandex.exchange.model.Exchange;
 import ru.yandex.exchange.service.ExchangeRateService;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,7 +25,7 @@ import static org.mockito.BDDMockito.given;
 @ActiveProfiles("test")
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
-@Import(StubSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 public abstract class BaseContractTest {
 
     @MockBean

@@ -6,6 +6,7 @@ import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.yandex.front.model.Currency;
@@ -22,21 +23,22 @@ public class CurrencyService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${exchange.uri}")
+    private String exchangeUri;
+
     public List<Currency> getCurrencies() {
         CircuitBreaker cb = cbRegistry.circuitBreaker("currencyApi");
         Retry retry = retryRegistry.retry("currencyApi");
 
         Supplier<List<Currency>> supplier = () -> {
-            Currency[] response = restTemplate.getForObject("http://exchange/rate/currencies", Currency[].class);
+            Currency[] response = restTemplate.getForObject(exchangeUri + "/rate/currencies", Currency[].class);
             return response != null ? List.of(response) : List.of();
         };
 
         return Decorators.ofSupplier(supplier)
                 .withCircuitBreaker(cb)
                 .withRetry(retry)
-                .withFallback(ex -> {
-                    return List.of();
-                })
+                .withFallback(ex -> List.of())
                 .get();
     }
 

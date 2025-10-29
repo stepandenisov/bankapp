@@ -12,7 +12,7 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-                type    : "USD",
+                type    : "CNY",
                 balance : 0.0
         ])
     }

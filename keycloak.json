@@ -1,0 +1,69 @@
+{
+  "realm": "master",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "account",
+      "secret": "a",
+      "protocol": "openid-connect",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "publicClient": false,
+      "redirectUris": ["*"]
+    },
+      {
+        "clientId": "cash",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      },
+      {
+        "clientId": "exchange-generator",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      },
+      {
+        "clientId": "exchange",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      },
+      {
+        "clientId": "front",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      },
+      {
+        "clientId": "notifications",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      },
+      {
+        "clientId": "transfer",
+        "secret": "a",
+        "protocol": "openid-connect",
+        "serviceAccountsEnabled": true,
+        "standardFlowEnabled": false,
+        "publicClient": false,
+        "redirectUris": ["*"]
+      }
+  ]
+}

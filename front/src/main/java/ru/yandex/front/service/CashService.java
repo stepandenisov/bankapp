@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,6 +26,9 @@ public class CashService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${cash.uri}")
+    private String cashUri;
+
     public void withdraw(Long accountId, Double volume) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("cashApi");
         Retry retry = retryRegistry.retry("cashApi");
@@ -38,7 +42,7 @@ public class CashService {
             HttpEntity<CashRequest> entity = new HttpEntity<>(new CashRequest(volume), headers);
 
             restTemplate.exchange(
-                    "http://cash/withdraw/" + accountId,
+                    cashUri + "/withdraw/" + accountId,
                     HttpMethod.POST,
                     entity,
                     Void.class
@@ -68,7 +72,7 @@ public class CashService {
             HttpEntity<CashRequest> entity = new HttpEntity<>(new CashRequest(volume), headers);
 
             restTemplate.exchange(
-                    "http://cash/top-up/" + accountId,
+                    cashUri + "/top-up/" + accountId,
                     HttpMethod.POST,
                     entity,
                     Void.class

@@ -7,12 +7,12 @@ Contract.make {
 
     request {
         method POST()
-        url("/accounts/1/top-up")
+        url("/accounts/2/top-up")
         headers {
             contentType(applicationJson())
         }
         body([
-                amount: 10.0
+                amount: 9000.0
         ])
     }
 

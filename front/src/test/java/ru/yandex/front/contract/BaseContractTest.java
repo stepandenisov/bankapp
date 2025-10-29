@@ -11,6 +11,7 @@ import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureM
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.front.TestSecurityConfig;
 import ru.yandex.front.model.EditPasswordRequest;
 import ru.yandex.front.model.EditUserInfoRequest;
 import ru.yandex.front.model.RegisterRequest;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.doNothing;
 @ActiveProfiles("test")
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
-@Import(StubSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 public abstract class BaseContractTest {
 
     @LocalServerPort

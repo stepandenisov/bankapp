@@ -11,6 +11,7 @@ import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureM
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.yandex.notifications.TestSecurityConfig;
 import ru.yandex.notifications.model.NotificationRequest;
 import ru.yandex.notifications.service.NotificationService;
 
@@ -21,7 +22,7 @@ import static org.mockito.Mockito.doNothing;
 @ActiveProfiles("test")
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
-@Import(StubSecurityConfig.class)
+@Import(TestSecurityConfig.class)
 public abstract class BaseContractTest {
 
     @LocalServerPort

@@ -8,6 +8,7 @@ import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -36,6 +37,13 @@ public class TransferService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${account.uri}")
+    String accountUri;
+
+    @Value("${exchange.uri}")
+    private String exchangeUri;
+
+
     private boolean transfer(Long fromAccountId,
                              Long toAccountId,
                              Double fromAmount,
@@ -48,7 +56,7 @@ public class TransferService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             restTemplate.exchange(
-                    "http://account/accounts/" + fromAccountId + "/withdraw",
+                    accountUri + "/accounts/" + fromAccountId + "/withdraw",
                     HttpMethod.POST,
                     new HttpEntity<>(new CashRequest(fromAmount), headers),
                     Boolean.class
@@ -62,7 +70,7 @@ public class TransferService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             restTemplate.exchange(
-                    "http://account/accounts/" + toAccountId + "/top-up",
+                    accountUri + "/accounts/" + toAccountId + "/top-up",
                     HttpMethod.POST,
                     new HttpEntity<>(new CashRequest(toAmount), headers),
                     Boolean.class
@@ -95,7 +103,7 @@ public class TransferService {
                 headers.setContentType(MediaType.APPLICATION_JSON);
 
                 restTemplate.exchange(
-                        "http://account/accounts/" + fromAccountId + "/top-up",
+                        accountUri + "/accounts/" + fromAccountId + "/top-up",
                         HttpMethod.POST,
                         new HttpEntity<>(new CashRequest(fromAmount), headers),
                         Boolean.class
@@ -129,7 +137,7 @@ public class TransferService {
                     "amount", amount
             );
             ExchangeResponse rateInfo = restTemplate.exchange(
-                    "http://exchange/rate/convert?from={from}&to={to}&amount={amount}",
+                    exchangeUri + "/rate/convert?from={from}&to={to}&amount={amount}",
                     HttpMethod.GET,
                     null,
                     ExchangeResponse.class,
@@ -161,7 +169,7 @@ public class TransferService {
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
             return List.of(restTemplate.exchange(
-                    "http://account/accounts/",
+                    accountUri + "/accounts",
                     HttpMethod.GET,
                     entity,
                     Account[].class
@@ -231,7 +239,7 @@ public class TransferService {
         Long toAccountId;
         try {
             toAccountId = restTemplate.exchange(
-                            "http://account/accounts/findAccountId?userId={userId}&currency={currency}",
+                            accountUri + "/accounts/findAccountId?userId={userId}&currency={currency}",
                             HttpMethod.GET,
                             new HttpEntity<>(new HttpHeaders() {{
                                 set("Authorization", "Jwt " + token);

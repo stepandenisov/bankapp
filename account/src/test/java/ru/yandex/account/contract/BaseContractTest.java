@@ -72,6 +72,15 @@ public abstract class BaseContractTest {
         accountRepository.findById(1L).orElseGet(() -> {
             Account a = new Account();
             a.setReminder(1000.0);
+            a.setCurrency(Currency.USD);
+//            a.setId(1L);
+            a.setUser(testUser);
+            return accountRepository.saveAndFlush(a);
+        });
+
+        accountRepository.findById(2L).orElseGet(() -> {
+            Account a = new Account();
+            a.setReminder(1000.0);
             a.setCurrency(Currency.RUB);
 //            a.setId(1L);
             a.setUser(testUser);

@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ public class UserService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${account.uri}")
+    private String accountUri;
+
 
     public void editPassword(EditPasswordRequest request) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
@@ -35,7 +39,7 @@ public class UserService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<EditPasswordRequest> entity = new HttpEntity<>(request, headers);
 
-            restTemplate.exchange("http://account/user/password", HttpMethod.POST, entity, Void.class);
+            restTemplate.exchange(accountUri + "/user/password", HttpMethod.POST, entity, Void.class);
             return null;
         };
 
@@ -59,7 +63,7 @@ public class UserService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<EditUserInfoRequest> entity = new HttpEntity<>(request, headers);
 
-            restTemplate.exchange("http://account/user/info", HttpMethod.POST, entity, Void.class);
+            restTemplate.exchange(accountUri + "/user/info", HttpMethod.POST, entity, Void.class);
             return null;
         };
 
@@ -78,7 +82,7 @@ public class UserService {
 
         Supplier<Void> supplier = () -> {
             HttpEntity<RegisterRequest> entity = new HttpEntity<>(request);
-            restTemplate.exchange("http://account/auth/register", HttpMethod.POST, entity, Void.class);
+            restTemplate.exchange(accountUri + "/auth/register", HttpMethod.POST, entity, Void.class);
             return null;
         };
 
@@ -102,7 +106,7 @@ public class UserService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Object> entity = new HttpEntity<>(headers);
 
-            UserDto[] response = restTemplate.exchange("http://account/user/all", HttpMethod.GET, entity, UserDto[].class).getBody();
+            UserDto[] response = restTemplate.exchange(accountUri + "/user/all", HttpMethod.GET, entity, UserDto[].class).getBody();
             return response != null ? List.of(response) : List.of();
         };
 

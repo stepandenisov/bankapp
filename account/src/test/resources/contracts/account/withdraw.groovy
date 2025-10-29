@@ -12,7 +12,7 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-                amount: 10.0
+                amount: 100.0
         ])
     }
 

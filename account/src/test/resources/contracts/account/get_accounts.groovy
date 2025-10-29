@@ -20,8 +20,19 @@ Contract.make {
         }
         body([
                 [
+                        id      : 1L,
+                        currency: "USD",
+                        reminder: 900.0
+                ],
+                [
+                        id      : 2L,
                         currency: "RUB",
-                        reminder : 1000.00
+                        reminder: 10000.0
+                ],
+                [
+                        id      : 3L,
+                        currency: "CNY",
+                        reminder: 0.0
                 ]
         ])
     }

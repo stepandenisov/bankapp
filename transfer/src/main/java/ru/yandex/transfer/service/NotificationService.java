@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class NotificationService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    @Value("${notification.uri}")
+    private String notificationUri;
+
 
     public void send(String message) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("notificationApi");
@@ -31,7 +35,7 @@ public class NotificationService {
             NotificationRequest notificationRequest = new NotificationRequest(message);
             HttpEntity<NotificationRequest> requestEntity = new HttpEntity<>(notificationRequest);
 
-            return restTemplate.exchange("http://notification/",
+            return restTemplate.exchange(notificationUri + "/",
                             HttpMethod.POST,
                             requestEntity,
                             String.class)

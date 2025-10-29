@@ -5,6 +5,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class NotificationService {
 
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
+
+    @Value("${front.uri}")
+    private String frontUri;
 
 
     public void send(NotificationRequest request) {

@@ -14,6 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rate")
+@CrossOrigin
 public class ExchangeRateController {
 
     private final ExchangeRateService exchangeRateService;

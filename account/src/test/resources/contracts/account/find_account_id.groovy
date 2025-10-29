@@ -23,6 +23,6 @@ Contract.make {
         headers {
             contentType(applicationJson())
         }
-        body(1L)
+        body(2L)
     }
 }

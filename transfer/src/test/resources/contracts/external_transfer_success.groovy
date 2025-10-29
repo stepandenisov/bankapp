@@ -12,8 +12,9 @@ Contract.make {
             contentType(applicationJson())
         }
         body(
-                fromAccount: "2",
-                toAccount: "1",
+                userId: 1L,
+                fromAccount: 1L,
+                toCurrency: "CNY",
                 amount: 100.0
         )
     }
