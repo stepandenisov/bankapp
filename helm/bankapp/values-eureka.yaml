@@ -1,0 +1,8 @@
+image:
+  repository: bankapp-eureka
+  tag: local
+
+fullnameOverride: "eureka"
+
+service:
+  port: 8761

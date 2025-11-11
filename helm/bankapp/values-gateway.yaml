@@ -1,0 +1,12 @@
+image:
+  repository: bankapp-gateway
+  tag: local
+
+fullnameOverride: "gateway"
+
+service:
+  port: 8080
+
+env:
+  CONFIG_SERVER_URI: "http://config-server:8888"
+  EUREKA_URI: "http://eureka:8761/eureka/"

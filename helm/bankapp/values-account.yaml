@@ -1,0 +1,23 @@
+image:
+  repository: bankapp-account
+  tag: local
+
+fullnameOverride: "account"
+
+service:
+  port: 8082
+
+env:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/yandex"
+  CONFIG_SERVER_URI: "http://config-server:8888"
+  EUREKA_URI: "http://eureka:8761/eureka/"
+  KEYCLOAK_TOKEN_URI: "http://keycloak:8089/realms/master/protocol/openid-connect/token"
+  KEYCLOAK_ISSUER_URI: "http://keycloak:8089/realms/master"
+
+secretEnv:
+  SPRING_DATASOURCE_USERNAME:
+    name: db-secret
+    key: POSTGRES_USER
+  SPRING_DATASOURCE_PASSWORD:
+    name: db-secret
+    key: POSTGRES_PASSWORD

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bankapp.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ include "bankapp.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "bankapp.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "bankapp.fullname" . }}
+    spec:
+      containers:
+        - name: {{ include "bankapp.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          {{- if .Values.args }}
+          args:
+  {{ toYaml .Values.args | nindent 12 }}
+  {{- end }}
+
+          env:
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+              {{- end }}
+
+              {{- range $key, $value := .Values.secretEnv }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $value.name }}
+                  key: {{ $value.key }}
+              {{- end }}
+
+          ports:
+            - containerPort: {{ .Values.service.port }}
+
+            {{- if .Values.volumeMounts }}
+          volumeMounts:
+            {{ toYaml .Values.volumeMounts | nindent 12 }}
+            {{- end }}
+
+            {{- if .Values.volumes }}
+      volumes:
+        {{ toYaml .Values.volumes | nindent 8 }}
+        {{- end }}

@@ -1,0 +1,14 @@
+image:
+  repository: bankapp-notification
+  tag: local
+
+fullnameOverride: "notification"
+
+service:
+  port: 8083
+
+env:
+  CONFIG_SERVER_URI: "http://config-server:8888"
+  EUREKA_URI: "http://eureka:8761/eureka/"
+  KEYCLOAK_TOKEN_URI: "http://keycloak:8089/realms/master/protocol/openid-connect/token"
+  KEYCLOAK_ISSUER_URI: "http://keycloak:8089/realms/master"

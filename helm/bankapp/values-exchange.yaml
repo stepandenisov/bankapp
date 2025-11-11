@@ -1,0 +1,13 @@
+image:
+  repository: bankapp-exchange
+  tag: local
+
+fullnameOverride: "exchange"
+
+service:
+  port: 8085
+
+env:
+  CONFIG_SERVER_URI: "http://config-server:8888"
+  EUREKA_URI: "http://eureka:8761/eureka/"
+  KEYCLOAK_ISSUER_URI: "http://keycloak:8089/realms/master"

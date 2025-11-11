@@ -1,0 +1,29 @@
+image:
+  repository: postgres
+  tag: "15"
+
+fullnameOverride: "postgres"
+
+service:
+  port: 5432
+
+env: {}
+
+secretEnv:
+  POSTGRES_DB:
+    name: db-secret
+    key: POSTGRES_DB
+  POSTGRES_USER:
+    name: db-secret
+    key: POSTGRES_USER
+  POSTGRES_PASSWORD:
+    name: db-secret
+    key: POSTGRES_PASSWORD
+
+volumeMounts:
+  - name: pgdata
+    mountPath: /var/lib/postgresql/data
+
+volumes:
+  - name: pgdata
+    emptyDir: {}

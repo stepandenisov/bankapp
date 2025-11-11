@@ -1,0 +1,12 @@
+image:
+  repository: bankapp-config-server
+  tag: local
+
+fullnameOverride: "config-server"
+
+service:
+  port: 8888
+  type: ClusterIP
+
+env:
+  SPRING_PROFILES_ACTIVE: "local"

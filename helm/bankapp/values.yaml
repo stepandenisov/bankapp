@@ -1,0 +1,15 @@
+namespace: bankapp
+
+replicaCount: 1
+
+image:
+  repository: ""
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+env: {}
+secretEnv: {}
+
+service:
+  port: 8080
+  type: ClusterIP
