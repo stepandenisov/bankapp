@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: account
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: account
+  template:
+    metadata:
+      labels:
+        app: account
+    spec:
+      containers:
+        - name: account
+          image: bankapp-account:local
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/yandex"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: POSTGRES_PASSWORD
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+            - name: KEYCLOAK_TOKEN_URI
+              value: "http://keycloak:8089/realms/master/protocol/openid-connect/token"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://keycloak:8089/realms/master"
+          ports:
+            - containerPort: 8082

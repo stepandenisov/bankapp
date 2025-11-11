@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: bankapp-gateway:local
+          env:
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+          ports:
+            - containerPort: 8080

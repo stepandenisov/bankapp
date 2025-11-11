@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cash
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cash
+  template:
+    metadata:
+      labels:
+        app: cash
+    spec:
+      containers:
+        - name: cash
+          image: bankapp-cash:local
+          env:
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+            - name: KEYCLOAK_TOKEN_URI
+              value: "http://keycloak:8080/realms/master/protocol/openid-connect/token"
+          ports:
+            - containerPort: 8081

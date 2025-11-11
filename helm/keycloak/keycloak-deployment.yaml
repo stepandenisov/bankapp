@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.1.3
+          args: ["start-dev", "--import-realm"]
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: "admin"
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: "admin"
+            - name: TZ
+              value: "Europe/Samara"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: realm-volume
+              mountPath: /opt/keycloak/data/import/realm-export.json
+              subPath: realm-export.json
+      volumes:
+        - name: realm-volume
+          configMap:
+            name: keycloak-realm
+            items:
+              - key: realm-export.json
+                path: realm-export.json

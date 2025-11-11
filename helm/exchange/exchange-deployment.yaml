@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exchange
+  template:
+    metadata:
+      labels:
+        app: exchange
+    spec:
+      containers:
+        - name: exchange
+          image: bankapp-exchange:local
+          env:
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://keycloak:8089/realms/master"
+          ports:
+            - containerPort: 8085

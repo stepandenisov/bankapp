@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      containers:
+        - name: notification
+          image: bankapp-notification:local
+          env:
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+            - name: KEYCLOAK_TOKEN_URI
+              value: "http://keycloak:8089/realms/master/protocol/openid-connect/token"
+            - name: KEYCLOAK_ISSUER_URI
+              value: "http://keycloak:8089/realms/master"

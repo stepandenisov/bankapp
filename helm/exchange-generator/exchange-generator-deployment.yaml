@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange-generator
+  namespace: bankapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exchange-generator
+  template:
+    metadata:
+      labels:
+        app: exchange-generator
+    spec:
+      containers:
+        - name: exchange-generator
+          image: bankapp-exchange-generator:local
+          env:
+            - name: CONFIG_SERVER_URI
+              value: "http://config-server:8888"
+            - name: EUREKA_URI
+              value: "http://eureka:8761/eureka/"
+            - name: KEYCLOAK_TOKEN_URI
+              value: "http://keycloak:8089/realms/master/protocol/openid-connect/token"

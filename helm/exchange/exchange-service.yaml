@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: exchange
+  namespace: bankapp
+spec:
+  selector:
+    app: exchange
+  ports:
+    - port: 8085
+      targetPort: 8085
+  type: ClusterIP
