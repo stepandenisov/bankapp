@@ -27,11 +27,24 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        run('find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;')
+                        run("""
+                            echo "Normalizing shell scripts for Unix..."
+                            find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;
+                        """)
+                    } else {
+                        run("""
+                        echo Normalizing shell scripts for Windows...
+                        powershell -Command ^
+                            Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
+                            ForEach-Object { ^
+                                (Get-Content \$_.FullName) -replace '\\r','' | Set-Content \$_.FullName -NoNewline ^
+                            }
+                        """)
                     }
                 }
             }
         }
+
 
         stage('Build Docker images') {
             steps {
