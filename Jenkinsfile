@@ -32,7 +32,7 @@ pipeline {
                             find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;
                         '''
                     } else {
-                        bat 'powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter \'wait-for-config-server.sh\' | ForEach-Object { $file = $_; (Get-Content $file.FullName -Raw -Encoding Default) -replace `r,`` | Set-Content $file.FullName -Encoding UTF8 -NoNewline }"'
+                        bat 'powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter \'wait-for-config-server.sh\' | ForEach-Object { $file = $_; (Get-Content $file.FullName -Raw -Encoding Default) -replace \"`r\",\"\" | Set-Content $file.FullName -Encoding UTF8 -NoNewline }"'
                     }
                 }
             }
