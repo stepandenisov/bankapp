@@ -77,16 +77,17 @@ pipeline {
 
         stage('Fix CoreDNS') {
             steps {
-                echo "Fixing CoreDNS DNS forwarding"
-                sh '''
+                echo "Fixing CoreDNS DNS forwarding..."
+                sh """
                     kubectl -n kube-system get configmap coredns -o yaml > coredns.yaml
-                    sed -i '/forward \./,+2d' coredns.yaml
-                    sed -i '/max_concurrent/a\\        forward . 8.8.8.8 1.1.1.1 {\\n           max_concurrent 1000\\n        }' coredns.yaml
+                    sed -i '/forward \\\\./,+2d' coredns.yaml
+                    sed -i '/max_concurrent/a\\\\        forward . 8.8.8.8 1.1.1.1 {\\\\n           max_concurrent 1000\\\\n        }' coredns.yaml
                     kubectl -n kube-system apply -f coredns.yaml
                     kubectl -n kube-system rollout restart deployment coredns
-                '''
+                """
             }
         }
+
 
         stage('Deploy with Helm') {
             steps {
