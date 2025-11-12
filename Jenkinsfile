@@ -6,15 +6,14 @@ pipeline {
         NAMESPACE = "bankapp"
     }
 
-    def run(cmd) {
-        if (isUnix()) {
-            sh cmd
-        } else {
-            bat cmd
-        }
-    }
-
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    run = { cmd -> if (isUnix()) sh cmd else bat cmd }
+                }
+            }
+        }
 
         stage('Build Maven project') {
             steps {
@@ -28,19 +27,19 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        run("""
+                        sh '''
                             echo "Normalizing shell scripts for Unix..."
                             find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;
-                        """)
+                        '''
                     } else {
-                        run("""
+                        bat """
                         echo Normalizing shell scripts for Windows...
                         powershell -NoProfile -Command ^
                             Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
                             ForEach-Object { ^
                                 (Get-Content $_.FullName -Raw) -replace '\\r','' | Set-Content $_.FullName -Encoding utf8 -NoNewline ^
                             }
-                        """)
+                        """
                     }
                 }
             }
