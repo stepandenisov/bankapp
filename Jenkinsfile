@@ -95,6 +95,7 @@ pipeline {
                         helm upgrade --install eureka -f ./helm/bankapp/values-eureka.yaml ./helm/bankapp
                         helm upgrade --install account -f ./helm/bankapp/values-account.yaml ./helm/bankapp
                         helm upgrade --install front -f ./helm/bankapp/values-front.yaml ./helm/bankapp
+                        helm upgrade --install notification -f ./helm/bankapp/values-notification.yaml ./helm/bankapp
                     """)
                 }
             }
