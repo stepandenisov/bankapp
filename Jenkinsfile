@@ -33,14 +33,15 @@ pipeline {
                         '''
                     } else {
                         bat """
-                            echo Normalizing shell scripts for Windows
-                            powershell -NoProfile -Command ^
-                                Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
-                                ForEach-Object { ^
-                                    \$file = \$_; ^
-                                    (Get-Content \$file.FullName -Raw) -replace "\\r","" | Set-Content \$file.FullName -Encoding utf8 -NoNewline ^
-                                }
+                        echo Normalizing shell scripts for Windows
+                        powershell -NoProfile -Command ^
+                            Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
+                            ForEach-Object { ^
+                                \$file = \$_; ^
+                                (Get-Content \$file.FullName -Raw -Encoding UTF8) -replace "`r","" | Set-Content \$file.FullName -Encoding UTF8 -NoNewline ^
+                            }
                         """
+
                     }
                 }
             }
