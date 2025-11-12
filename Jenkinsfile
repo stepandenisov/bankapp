@@ -25,8 +25,10 @@ pipeline {
 
         stage('Normalize scripts') {
             steps {
-                if (isUnix()) {
-                    run('find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;')
+                script {
+                    if (isUnix()) {
+                        run('find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;')
+                    }
                 }
             }
         }
