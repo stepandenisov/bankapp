@@ -28,22 +28,25 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                            echo "Normalizing shell scripts for Unix..."
+                            echo "Normalizing shell scripts for Unix"
                             find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;
                         '''
                     } else {
                         bat """
-                        echo Normalizing shell scripts for Windows...
-                        powershell -NoProfile -Command ^
-                            Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
-                            ForEach-Object { ^
-                                (Get-Content $_.FullName -Raw) -replace '\\r','' | Set-Content $_.FullName -Encoding utf8 -NoNewline ^
-                            }
+                            echo Normalizing shell scripts for Windows
+                            powershell -NoProfile -Command ^
+                                Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
+                                ForEach-Object { ^
+                                    \$file = \$_; ^
+                                    (Get-Content \$file.FullName -Raw) -replace "\\r","" | Set-Content \$file.FullName -Encoding utf8 -NoNewline ^
+                                }
                         """
                     }
                 }
             }
         }
+
+
 
 
 
