@@ -15,29 +15,6 @@ pipeline {
             }
         }
 
-        stage('Start Minikube') {
-            steps {
-                script {
-                    run("minikube start --driver=${MINIKUBE_DRIVER} --memory=4000 --cpus=4")
-                }
-            }
-        }
-
-        stage('Configure Docker inside Minikube') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        run("eval \$(minikube -p minikube docker-env) && docker info")
-                    } else {
-                        run("""
-                            for /f "tokens=*" %%i in ('minikube -p minikube docker-env --shell cmd') do %%i
-                            docker info
-                        """)
-                    }
-                }
-            }
-        }
-
         stage('Build Maven project') {
             steps {
                 script {
