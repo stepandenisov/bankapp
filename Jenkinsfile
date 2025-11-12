@@ -34,16 +34,17 @@ pipeline {
                     } else {
                         run("""
                         echo Normalizing shell scripts for Windows...
-                        powershell -Command ^
+                        powershell -NoProfile -Command ^
                             Get-ChildItem -Recurse -Filter 'wait-for-config-server.sh' | ^
                             ForEach-Object { ^
-                                (Get-Content \$_.FullName) -replace '\\r','' | Set-Content \$_.FullName -NoNewline ^
+                                (Get-Content $_.FullName -Raw) -replace '\\r','' | Set-Content $_.FullName -Encoding utf8 -NoNewline ^
                             }
                         """)
                     }
                 }
             }
         }
+
 
 
         stage('Build Docker images') {
