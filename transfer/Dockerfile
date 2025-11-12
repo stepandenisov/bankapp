@@ -6,7 +6,7 @@ ARG JAR_FILE=transfer/target/*.jar
 COPY ${JAR_FILE} app.jar
 
 COPY wait-for-config-server.sh ./wait-for-config-server.sh
-RUN chmod +x ./wait-for-config-server.sh
+RUN dos2unix ./wait-for-config-server.sh && chmod +x ./wait-for-config-server.sh
 
 ENV JAVA_OPTS=""
 
