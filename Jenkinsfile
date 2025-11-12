@@ -23,6 +23,14 @@ pipeline {
             }
         }
 
+        stage('Normalize scripts') {
+            steps {
+                if (isUnix()) {
+                    run('find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;')
+                }
+            }
+        }
+
         stage('Build Docker images') {
             steps {
                 script {
