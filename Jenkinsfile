@@ -6,14 +6,15 @@ pipeline {
         NAMESPACE = "bankapp"
     }
 
-    stages {
-        stage('Setup') {
-            steps {
-                script {
-                    run = { cmd -> if (isUnix()) sh cmd else bat cmd }
-                }
-            }
+    def run(cmd) {
+        if (isUnix()) {
+            sh cmd
+        } else {
+            bat cmd
         }
+    }
+
+    stages {
 
         stage('Build Maven project') {
             steps {
