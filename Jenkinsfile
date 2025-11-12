@@ -7,30 +7,32 @@ pipeline {
     }
 
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    run = { cmd -> if (isUnix()) sh cmd else bat cmd }
+                }
+            }
+        }
 
         stage('Start Minikube') {
             steps {
-                echo "Starting Minikube"
                 script {
-                    if (isUnix()) {
-                        sh "minikube start --driver=${MINIKUBE_DRIVER} --memory=4000 --cpus=4"
-                    } else {
-                        bat "minikube start --driver=${MINIKUBE_DRIVER} --memory=4000 --cpus=4"
-                    }
+                    run("minikube start --driver=${MINIKUBE_DRIVER} --memory=4000 --cpus=4")
                 }
             }
         }
 
         stage('Configure Docker inside Minikube') {
             steps {
-                echo "Configuring Docker inside Minikube"
                 script {
                     if (isUnix()) {
-                        sh "eval \$(minikube -p minikube docker-env)"
-                        sh "docker info"
+                        run("eval \$(minikube -p minikube docker-env) && docker info")
                     } else {
-                        bat 'minikube -p minikube docker-env --shell powershell | Invoke-Expression'
-                        bat 'docker info'
+                        run("""
+                            for /f "tokens=*" %%i in ('minikube -p minikube docker-env --shell cmd') do %%i
+                            docker info
+                        """)
                     }
                 }
             }
@@ -38,38 +40,37 @@ pipeline {
 
         stage('Build Maven project') {
             steps {
-                echo "Building project with Maven"
                 script {
-                    if (isUnix()) {
-                        sh "mvn clean install -DskipTests"
-                    } else {
-                        bat "mvn clean install -DskipTests"
-                    }
+                    run("mvn clean install -DskipTests")
                 }
             }
         }
 
         stage('Build Docker images') {
             steps {
-                echo "Building Docker images"
                 script {
-                    def buildCmds = '''
-                        docker build -t bankapp-config-server:local -f config-server/Dockerfile .
-                        docker build -t bankapp-eureka:local -f eureka/Dockerfile .
-                        docker build -t bankapp-gateway:local -f gateway/Dockerfile .
-                        docker build -t bankapp-account:local -f account/Dockerfile .
-                        docker build -t bankapp-blocker:local -f blocker/Dockerfile .
-                        docker build -t bankapp-cash:local -f cash/Dockerfile .
-                        docker build -t bankapp-exchange:local -f exchange/Dockerfile .
-                        docker build -t bankapp-exchange-generator:local -f exchange-generator/Dockerfile .
-                        docker build -t bankapp-transfer:local -f transfer/Dockerfile .
-                        docker build -t bankapp-front:local -f front/Dockerfile .
-                        docker build -t bankapp-notification:local -f notifications/Dockerfile .
-                    '''
                     if (isUnix()) {
-                        sh "eval \$(minikube -p minikube docker-env) && ${buildCmds}"
+                        run("""
+                            eval \$(minikube -p minikube docker-env)
+                            for svc in config-server eureka gateway account blocker cash exchange exchange-generator transfer front notifications; do
+                                docker build -t bankapp-\$svc:local -f \$svc/Dockerfile .
+                            done
+                        """)
                     } else {
-                        bat "minikube -p minikube docker-env --shell powershell | Invoke-Expression & ${buildCmds}"
+                        run("""
+                            for /f "tokens=*" %%i in ('minikube -p minikube docker-env --shell cmd') do %%i
+                            docker build -t bankapp-config-server:local -f config-server/Dockerfile .
+                            docker build -t bankapp-eureka:local -f eureka/Dockerfile .
+                            docker build -t bankapp-gateway:local -f gateway/Dockerfile .
+                            docker build -t bankapp-account:local -f account/Dockerfile .
+                            docker build -t bankapp-blocker:local -f blocker/Dockerfile .
+                            docker build -t bankapp-cash:local -f cash/Dockerfile .
+                            docker build -t bankapp-exchange:local -f exchange/Dockerfile .
+                            docker build -t bankapp-exchange-generator:local -f exchange-generator/Dockerfile .
+                            docker build -t bankapp-transfer:local -f transfer/Dockerfile .
+                            docker build -t bankapp-front:local -f front/Dockerfile .
+                            docker build -t bankapp-notification:local -f notifications/Dockerfile .
+                        """)
                     }
                 }
             }
@@ -77,53 +78,40 @@ pipeline {
 
         stage('Prepare Kubernetes') {
             steps {
-                echo "Creating namespace, secrets, configmaps"
                 script {
-                    def prepareCmds = """
+                    run("""
                         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
-                        kubectl create secret generic db-secret -n ${NAMESPACE} --from-literal=POSTGRES_USER=postgres --from-literal=POSTGRES_PASSWORD=1 --from-literal=POSTGRES_DB=yandex --dry-run=client -o yaml | kubectl apply -f -
-                        kubectl create configmap keycloak-realm --from-file=realm-export.json=./keycloak.json -n ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
-                    """
-                    if (isUnix()) {
-                        sh prepareCmds
-                    } else {
-                        bat prepareCmds
-                    }
+                        kubectl create secret generic db-secret -n ${NAMESPACE} \
+                            --from-literal=POSTGRES_USER=postgres \
+                            --from-literal=POSTGRES_PASSWORD=1 \
+                            --from-literal=POSTGRES_DB=yandex \
+                            --dry-run=client -o yaml | kubectl apply -f -
+                        kubectl create configmap keycloak-realm \
+                            --from-file=realm-export.json=./keycloak.json -n ${NAMESPACE} \
+                            --dry-run=client -o yaml | kubectl apply -f -
+                    """)
                 }
             }
         }
 
         stage('Fix CoreDNS') {
             steps {
-                echo "Fixing CoreDNS DNS forwarding"
                 script {
-                    def fixDnsCmds = '''
+                    run("""
                         kubectl -n kube-system get configmap coredns -o yaml > coredns.yaml
-                        sed -i "/forward \\./,+2d" coredns.yaml
-                        sed -i "/max_concurrent/a\\        forward . 8.8.8.8 1.1.1.1 {\\n           max_concurrent 1000\\n        }" coredns.yaml
+                        sed -i '/forward \\\\./,+2d' coredns.yaml
+                        sed -i '/max_concurrent/a\\\\        forward . 8.8.8.8 1.1.1.1 {\\\\n           max_concurrent 1000\\\\n        }' coredns.yaml
                         kubectl -n kube-system apply -f coredns.yaml
                         kubectl -n kube-system rollout restart deployment coredns
-                    '''
-                    if (isUnix()) {
-                        sh fixDnsCmds
-                    } else {
-                        // sed на Windows отсутствует — можно заменить PowerShell’ом
-                        bat '''
-                            kubectl -n kube-system get configmap coredns -o yaml > coredns.yaml
-                            powershell -Command "(Get-Content coredns.yaml) -replace 'forward .*', 'forward . 8.8.8.8 1.1.1.1 {`n           max_concurrent 1000`n        }' | Set-Content coredns.yaml"
-                            kubectl -n kube-system apply -f coredns.yaml
-                            kubectl -n kube-system rollout restart deployment coredns
-                        '''
-                    }
+                    """)
                 }
             }
         }
 
         stage('Deploy with Helm') {
             steps {
-                echo "Deploying microservices with Helm"
                 script {
-                    def helmCmds = '''
+                    run("""
                         helm upgrade --install config-server -f ./helm/bankapp/values-config-server.yaml ./helm/bankapp
                         helm upgrade --install keycloak -f ./helm/bankapp/values-keycloak.yaml ./helm/bankapp
                         helm upgrade --install postgres -f ./helm/bankapp/values-postgres.yaml ./helm/bankapp
@@ -137,12 +125,7 @@ pipeline {
                         helm upgrade --install gateway -f ./helm/bankapp/values-gateway.yaml ./helm/bankapp
                         helm upgrade --install notification -f ./helm/bankapp/values-notification.yaml ./helm/bankapp
                         helm upgrade --install transfer -f ./helm/bankapp/values-transfer.yaml ./helm/bankapp
-                    '''
-                    if (isUnix()) {
-                        sh helmCmds
-                    } else {
-                        bat helmCmds
-                    }
+                    """)
                 }
             }
         }
