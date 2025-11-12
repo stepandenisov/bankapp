@@ -1,4 +1,4 @@
-#!/bin/sh
+﻿#!/bin/sh
 CONFIG_URL=${CONFIG_SERVER_URI:-http://config-server:8888}
 
 echo "Waiting for Config Server at $CONFIG_URL..."

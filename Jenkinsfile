@@ -23,26 +23,6 @@ pipeline {
             }
         }
 
-        stage('Normalize scripts') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-                            echo "Normalizing shell scripts for Unix"
-                            find . -name "wait-for-config-server.sh" -exec dos2unix {} \\;
-                        '''
-                    } else {
-                        bat 'powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter \'wait-for-config-server.sh\' | ForEach-Object { $file = $_; (Get-Content $file.FullName -Raw -Encoding Default) -replace \"`r\",\"\" | Set-Content $file.FullName -Encoding UTF8 -NoNewline }"'
-                    }
-                }
-            }
-        }
-
-
-
-
-
-
         stage('Build Docker images') {
             steps {
                 script {
