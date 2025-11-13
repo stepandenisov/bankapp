@@ -28,19 +28,19 @@ public class CurrencyService {
     @Value("${exchange.uri}")
     private String exchangeUri;
 
-    public List<ExchangeRate> getExchangeRate(){
+    public ExchangeRateResponse getExchangeRate(){
         CircuitBreaker cb = cbRegistry.circuitBreaker("currencyApi");
         Retry retry = retryRegistry.retry("currencyApi");
 
-        Supplier<List<ExchangeRate>> supplier = () -> {
+        Supplier<ExchangeRateResponse> supplier = () -> {
             ExchangeRateResponse response = restTemplate.getForObject(exchangeUri + "/rate", ExchangeRateResponse.class);
-            return response != null ? response.getRate() : List.of();
+            return response != null ? response : new ExchangeRateResponse(List.of());
         };
 
         return Decorators.ofSupplier(supplier)
                 .withCircuitBreaker(cb)
                 .withRetry(retry)
-                .withFallback(ex -> List.of())
+                .withFallback(ex -> new ExchangeRateResponse(List.of()))
                 .get();
     }
 
