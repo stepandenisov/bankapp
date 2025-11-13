@@ -83,7 +83,7 @@
     <script language="JavaScript">
         setInterval(() => {
             var td = document.getElementById('exchange_rates');
-            fetch('http://localhost:8085/rate', {
+            fetch('http://localhost:8088/exchange', {
                 method: 'GET',
                 mode: 'cors'
             })
