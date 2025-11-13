@@ -1,7 +1,7 @@
-Для запуска в Docker:
-1. ```mvn clean install```
-2. ```docker compose up --build```
-3. Приложение на ```http://localhost:8088```
+Пайплайн для запуска в файле Jenkinsfile. 
+Пайплайн предполагает, что minikube уже запущен. 
+Для работы с приложением нужно пробросить порт командой:
+```kubectl port-forward service/front -n bankapp 8088:8088```
 
 Учетные записи:
 - ```user``` / ```1```
