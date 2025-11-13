@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.yandex.front.model.Currency;
 import ru.yandex.front.model.ExchangeRate;
+import ru.yandex.front.model.ExchangeRateResponse;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -32,8 +33,8 @@ public class CurrencyService {
         Retry retry = retryRegistry.retry("currencyApi");
 
         Supplier<List<ExchangeRate>> supplier = () -> {
-            ExchangeRate[] response = restTemplate.getForObject(exchangeUri + "/rate", ExchangeRate[].class);
-            return response != null ? List.of(response) : List.of();
+            ExchangeRateResponse response = restTemplate.getForObject(exchangeUri + "/rate", ExchangeRateResponse.class);
+            return response != null ? response.getRate() : List.of();
         };
 
         return Decorators.ofSupplier(supplier)
