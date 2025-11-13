@@ -17,7 +17,7 @@ public class ExchangeController {
 
     private final CurrencyService currencyService;
 
-    @GetMapping
+    @GetMapping(path = {"/", ""})
     public ExchangeRateResponse getExchangeRate(){
         return currencyService.getExchangeRate();
     }
