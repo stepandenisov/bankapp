@@ -2,10 +2,13 @@ package ru.yandex.account.integration.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +26,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WithMockUser(username = "testuser")
+@EmbeddedKafka(
+        topics = {"notifications"},
+        partitions = 1
+)
 public class AuthControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -40,6 +47,11 @@ public class AuthControllerIntegrationTest extends BaseIntegrationTest {
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+    }
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
     }
 
     @Test

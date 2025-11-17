@@ -3,6 +3,7 @@ package ru.yandex.transfer.contract;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.apache.coyote.BadRequestException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.transfer.TestSecurityConfig;
@@ -28,6 +31,10 @@ import static org.mockito.Mockito.when;
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
+@EmbeddedKafka(
+        topics = {"exchange"},
+        partitions = 1
+)
 public abstract class BaseContractTest {
 
     @LocalServerPort
@@ -46,6 +53,11 @@ public abstract class BaseContractTest {
     private BlockerService blockerService;
     @MockBean
     private NotificationService notificationService;
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
+    }
 
     @BeforeEach
     void setup() throws BadRequestException {

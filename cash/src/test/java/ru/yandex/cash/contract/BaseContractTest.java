@@ -1,6 +1,7 @@
 package ru.yandex.cash.contract;
 
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,6 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.cash.configuration.TestSecurityConfig;
@@ -23,6 +26,11 @@ import static org.mockito.BDDMockito.given;
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
 @Import(TestSecurityConfig.class)
+@EmbeddedKafka(
+        topics = {"notifications"},
+        partitions = 1
+)
+
 public abstract class BaseContractTest {
 
     @MockBean
@@ -30,6 +38,11 @@ public abstract class BaseContractTest {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
+    }
 
     @BeforeEach
     void setup() {

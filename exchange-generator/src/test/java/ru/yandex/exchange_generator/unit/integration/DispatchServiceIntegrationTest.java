@@ -3,6 +3,7 @@ package ru.yandex.exchange_generator.unit.integration;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,11 @@ public class DispatchServiceIntegrationTest {
 
     @MockBean
     private GenerationService generationService;
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
+    }
 
     @Test
     void sendExchangeRate_shouldSendMessageToKafka(@Autowired EmbeddedKafkaBroker embeddedKafka) {

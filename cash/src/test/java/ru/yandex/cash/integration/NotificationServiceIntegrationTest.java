@@ -3,6 +3,7 @@ package ru.yandex.cash.integration;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +37,11 @@ public class NotificationServiceIntegrationTest {
 
     @Autowired
     private EmbeddedKafkaBroker embeddedKafka;
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
+    }
 
     @Test
     void testSend() {

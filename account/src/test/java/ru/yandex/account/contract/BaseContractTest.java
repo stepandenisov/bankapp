@@ -3,6 +3,7 @@ package ru.yandex.account.contract;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import org.checkerframework.checker.units.qual.C;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -10,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.cloud.contract.verifier.messaging.boot.AutoConfigureMessageVerifier;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +35,11 @@ import java.time.LocalDate;
 @AutoConfigureMessageVerifier
 @AutoConfigureMockMvc
 @Import(StubSecurityConfig.class)
+@EmbeddedKafka(
+        topics = {"notifications"},
+        partitions = 1
+)
+
 public abstract class BaseContractTest {
 
     @LocalServerPort
@@ -39,6 +47,11 @@ public abstract class BaseContractTest {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @BeforeAll
+    static void init(@Autowired EmbeddedKafkaBroker broker) {
+        System.setProperty("spring.kafka.bootstrap-servers", broker.getBrokersAsString());
+    }
 
     @BeforeEach
     public void setupRestAssuredMockMvc() {
