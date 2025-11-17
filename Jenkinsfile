@@ -86,22 +86,13 @@ pipeline {
         }
 
         stage('Kafka') {
-                    steps {
-                        script {
-                            run("""
-                                helm upgrade --install kafka -f ./helm/kafka/values.yaml ./helm/kafka
-                            """)
-                        }
-                    }
-                }
-
-        stage("Create Kafka Topics") {
             steps {
-                sh """
-                kubectl apply -f ./helm/kafka/kafka-create-topics.yaml
-                kubectl wait --for=condition=complete job/kafka-create-topics --timeout=60s
-                kubectl delete job kafka-create-topics
-                """
+                script {
+                    run("""
+                        helm upgrade --install kafka -n ${NAMESPACE} -f ./helm/kafka/values.yaml ./helm/kafka
+                        kubectl rollout status statefulset/kafka -n ${NAMESPACE} --timeout=120s
+                    """)
+                }
             }
         }
 

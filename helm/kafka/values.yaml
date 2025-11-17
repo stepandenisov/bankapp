@@ -1,20 +1,24 @@
 replicaCount: 1
 
 image:
-  repository: bitnami/kafka
-  tag: 3.7
+  repository: apache/kafka
+  tag: 3.7.2
   pullPolicy: IfNotPresent
-
-zookeeper:
-  replicaCount: 1
-  image:
-    repository: bitnami/zookeeper
-    tag: 3.9
-  storage: 2Gi
 
 kafka:
   storage: 5Gi
   servicePort: 9092
   externalAccess: false
+  env:
+    KAFKA_PROCESS_ROLES: broker,controller
+    KAFKA_NODE_ID: 0
+    KAFKA_CONTROLLER_QUORUM_VOTERS: "0@kafka-0:9093"
+    KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-0.bankapp.svc.cluster.local:9092
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+    KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    KAFKA_NUM_PARTITIONS: 1
+    KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
 
 resources: {}

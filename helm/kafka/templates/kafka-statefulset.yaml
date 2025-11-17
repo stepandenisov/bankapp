@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: kafka
+  namespace: {{ .Release.Namespace }}
 spec:
   serviceName: kafka
   replicas: {{ .Values.replicaCount }}
@@ -16,29 +17,23 @@ spec:
       containers:
         - name: kafka
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 9092
+              name: client
+            - containerPort: 9093
+              name: controller
           env:
-            - name: KAFKA_CFG_ZOOKEEPER_CONNECT
-              value: "zookeeper:2181"
-            - name: KAFKA_CFG_LISTENERS
-              value: PLAINTEXT://:9092
-            - name: KAFKA_CFG_ADVERTISED_LISTENERS
-              value: PLAINTEXT://kafka-$(STATEFULSET_ORDINAL).kafka:9092
-            - name: STATEFULSET_ORDINAL
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: KAFKA_CFG_BROKER_ID
-              value: "$(STATEFULSET_ORDINAL)"
-            - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
-              value: "true"
+  {{- range $key, $value := .Values.kafka.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+  {{- end }}
           volumeMounts:
-            - name: data
-              mountPath: /bitnami/kafka
+            - name: kafka-data
+              mountPath: /kafka/data
   volumeClaimTemplates:
     - metadata:
-        name: data
+        name: kafka-data
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:
