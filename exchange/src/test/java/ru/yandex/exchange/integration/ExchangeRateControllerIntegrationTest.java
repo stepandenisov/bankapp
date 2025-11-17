@@ -53,26 +53,6 @@ class ExchangeRateControllerIntegrationTest {
     }
 
     @Test
-    void setExchangeRate_ShouldUpdateRates() throws Exception {
-        List<Exchange> newRates = List.of(
-                new Exchange(Currency.USD, 1.0),
-                new Exchange(Currency.CNY, 0.95)
-        );
-        ExchangeRateRequest request = new ExchangeRateRequest();
-        request.setExchangeRate(newRates);
-
-        mockMvc.perform(post("/rate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
-
-        List<Exchange> ratesInService = exchangeRateService.getRates();
-        assertThat(ratesInService, hasSize(2));
-        assertThat(ratesInService, hasItem(hasProperty("currency", equalTo(Currency.CNY))));
-        assertThat(ratesInService, hasItem(hasProperty("value", equalTo(0.95))));
-    }
-
-    @Test
     void getExchangeInfo_ShouldReturnConvertedAmount() throws Exception {
         double amount = 100.0;
 

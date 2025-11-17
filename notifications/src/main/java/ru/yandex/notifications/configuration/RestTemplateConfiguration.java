@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
@@ -17,12 +18,12 @@ import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Collections;
 
 @Configuration
 @Profile("!test")
 public class RestTemplateConfiguration {
+
     @Autowired
     private ClientRegistrationRepository clientRegistrationRepository;
 
@@ -30,16 +31,21 @@ public class RestTemplateConfiguration {
     private OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     @Bean
-    public OAuth2AuthorizedClientManager authorizedClientManager() {
-        OAuth2AuthorizedClientProvider authorizedClientProvider =
+    public OAuth2AuthorizedClientManager authorizedClientManager(
+            ClientRegistrationRepository clientRegistrationRepository,
+            OAuth2AuthorizedClientService authorizedClientService) {
+
+        AuthorizedClientServiceOAuth2AuthorizedClientManager manager =
+                new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                        clientRegistrationRepository,
+                        authorizedClientService
+                );
+
+        manager.setAuthorizedClientProvider(
                 OAuth2AuthorizedClientProviderBuilder.builder()
                         .clientCredentials()
-                        .build();
-
-        DefaultOAuth2AuthorizedClientManager manager =
-                new DefaultOAuth2AuthorizedClientManager(clientRegistrationRepository, authorizedClientRepository);
-
-        manager.setAuthorizedClientProvider(authorizedClientProvider);
+                        .build()
+        );
 
         return manager;
     }
@@ -61,22 +67,26 @@ public class RestTemplateConfiguration {
 
         restTemplate.setInterceptors(
                 Collections.singletonList((request, body, execution) -> {
-                        OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
-                                .withClientRegistrationId("keycloak")
-                                .principal("notifications-service")
-                                .build();
+                    UsernamePasswordAuthenticationToken principal =
+                            new UsernamePasswordAuthenticationToken("notifications-service", "N/A");
 
-                        OAuth2AuthorizedClient client =
-                                authorizedClientManager.authorize(authRequest);
+                    OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
+                            .withClientRegistrationId("keycloak")
+                            .principal(principal)
+                            .build();
 
-                        if (client == null) {
-                            throw new IllegalStateException("Cannot authorize OAuth2 client");
-                        }
+                    OAuth2AuthorizedClient client = authorizedClientManager.authorize(authRequest);
 
-                        OAuth2AccessToken accessToken = client.getAccessToken();
-                        request.getHeaders().add("Authorization", "Bearer " + accessToken.getTokenValue());
+                    if (client == null) {
+                        throw new IllegalStateException("Cannot authorize OAuth2 client");
+                    }
+
+                    OAuth2AccessToken accessToken = client.getAccessToken();
+                    request.getHeaders().add("Authorization", "Bearer " + accessToken.getTokenValue());
+
                     return execution.execute(request, body);
-                }));
+                })
+        );
 
         return restTemplate;
     }

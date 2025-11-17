@@ -21,7 +21,6 @@ import java.util.List;
 @AutoConfigureStubRunner(
         ids = {
                 "ru.yandex:blocker:+:stubs:8081",
-                "ru.yandex:notifications:+:stubs:8082",
                 "ru.yandex:account:+:stubs:8083",
                 "ru.yandex:exchange:+:stubs:8084"
         },

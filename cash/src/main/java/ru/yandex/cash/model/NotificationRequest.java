@@ -9,4 +9,12 @@ import lombok.NoArgsConstructor;
 @Getter
 public class NotificationRequest {
     private String message;
+
+    @Override
+    public boolean equals(Object other){
+        if (other instanceof NotificationRequest nr){
+            return nr.getMessage().equals(this.message);
+        }
+        return false;
+    }
 }

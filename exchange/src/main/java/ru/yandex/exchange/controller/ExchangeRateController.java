@@ -19,11 +19,6 @@ public class ExchangeRateController {
 
     private final ExchangeRateService exchangeRateService;
 
-    @PostMapping(path = {"/", ""})
-    public void setExchangeRate(@RequestBody ExchangeRateRequest request) {
-        exchangeRateService.setRates(request.getExchangeRate());
-    }
-
     @GetMapping(path = "/convert")
     public ResponseEntity<Exchange> getExchangeInfo(@RequestParam("from") Currency from,
                                                     @RequestParam("to") Currency to,

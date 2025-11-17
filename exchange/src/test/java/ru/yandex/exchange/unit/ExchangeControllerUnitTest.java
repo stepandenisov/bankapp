@@ -41,22 +41,6 @@ class ExchangeControllerUnitTest {
     private ExchangeRateService exchangeRateService;
 
     @Test
-    void setExchangeRate_shouldCallService() throws Exception {
-        List<Exchange> rates = List.of(new Exchange(Currency.RUB, 1.0));
-        ExchangeRateRequest req = new ExchangeRateRequest();
-        req.setExchangeRate(rates);
-
-        mockMvc.perform(post("/rate")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isOk());
-
-        ArgumentCaptor<List<Exchange>> captor = ArgumentCaptor.forClass(List.class);
-        verify(exchangeRateService, times(1)).setRates(captor.capture());
-        assertThat(captor.getValue()).contains(new Exchange(Currency.RUB, 1.0));
-    }
-
-    @Test
     void getExchangeInfo_shouldReturnConvertedValue() throws Exception {
         when(exchangeRateService.convert(Currency.USD, Currency.RUB, 10.0))
                 .thenReturn(925.0);
