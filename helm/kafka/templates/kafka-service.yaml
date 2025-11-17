@@ -2,11 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kafka
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ .Values.namespace }}
 spec:
-  ports:
-    - port: {{ .Values.kafka.servicePort }}
-      name: client
   clusterIP: None
   selector:
     app: kafka
+  ports:
+    - name: client
+      port: {{ .Values.kafka.servicePort }}
+    - name: controller
+      port: 9093
