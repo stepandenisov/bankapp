@@ -1,3 +1,4 @@
+namespace: bankapp
 replicaCount: 1
 
 image:
