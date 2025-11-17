@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-create-topics
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kafka-admin
+          image: bitnami/kafka:3.7
+          command:
+            - sh
+            - -c
+            - |
+              echo "Creating Kafka topics..."
+
+              kafka-topics.sh --bootstrap-server kafka:9092 \
+                --create --if-not-exists \
+                --topic notifications \
+                --partitions 3 \
+                --replication-factor 1
+
+              kafka-topics.sh --bootstrap-server kafka:9092 \
+                --create --if-not-exists \
+                --topic exchange \
+                --partitions 3 \
+                --replication-factor 1
+
+              echo "Topics created"

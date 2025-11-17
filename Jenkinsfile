@@ -95,6 +95,17 @@ pipeline {
                     }
                 }
 
+        stage("Create Kafka Topics") {
+            steps {
+                sh """
+                kubectl apply -f ./helm/kafka/kafka-create-topics.yaml
+                kubectl wait --for=condition=complete job/kafka-create-topics --timeout=60s
+                kubectl delete job kafka-create-topics
+                """
+            }
+        }
+
+
         stage('Deploy with Helm') {
             steps {
                 script {
@@ -105,13 +116,9 @@ pipeline {
                         helm upgrade --install eureka -f ./helm/bankapp/values-eureka.yaml ./helm/bankapp
                         helm upgrade --install account -f ./helm/bankapp/values-account.yaml ./helm/bankapp
                         helm upgrade --install front -f ./helm/bankapp/values-front.yaml ./helm/bankapp
-                        helm upgrade --install blocker -f ./helm/bankapp/values-blocker.yaml ./helm/bankapp
-                        helm upgrade --install cash -f ./helm/bankapp/values-cash.yaml ./helm/bankapp
                         helm upgrade --install exchange -f ./helm/bankapp/values-exchange.yaml ./helm/bankapp
                         helm upgrade --install exchange-generator -f ./helm/bankapp/values-exchange-generator.yaml ./helm/bankapp
-                        helm upgrade --install gateway -f ./helm/bankapp/values-gateway.yaml ./helm/bankapp
                         helm upgrade --install notification -f ./helm/bankapp/values-notification.yaml ./helm/bankapp
-                        helm upgrade --install transfer -f ./helm/bankapp/values-transfer.yaml ./helm/bankapp
                     """)
                 }
             }
