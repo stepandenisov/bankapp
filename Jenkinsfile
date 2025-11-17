@@ -85,6 +85,16 @@ pipeline {
             }
         }
 
+        stage('Kafka') {
+                    steps {
+                        script {
+                            run("""
+                                helm upgrade --install kafka -f ./helm/kafka/values.yaml ./helm/kafka
+                            """)
+                        }
+                    }
+                }
+
         stage('Deploy with Helm') {
             steps {
                 script {
