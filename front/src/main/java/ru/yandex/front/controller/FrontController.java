@@ -39,7 +39,7 @@ public class FrontController {
         model.addAttribute("currency", currencies);
         model.addAttribute("userCurrency", userCurrencies);
         model.addAttribute("users", userService.getUsers());
-        model.addAttribute("currencyUri", currencyUri);
+        model.addAttribute("currency.uri", currencyUri);
         return "main";
     }
 
