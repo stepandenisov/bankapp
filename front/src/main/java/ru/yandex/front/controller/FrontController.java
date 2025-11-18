@@ -24,7 +24,7 @@ public class FrontController {
     private final UserService userService;
 
     @Value("${currency.uri}")
-    private final String currencyUri;
+    private String currencyUri;
 
 
     @GetMapping(path = {"", "/"})
