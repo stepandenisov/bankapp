@@ -6,6 +6,7 @@ import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -26,6 +27,7 @@ public class CurrencyService {
     private final RetryRegistry retryRegistry;
 
     @Value("${exchange.uri}")
+    @Setter
     private String exchangeUri;
 
     public ExchangeRateResponse getExchangeRate(){

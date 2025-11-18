@@ -67,7 +67,7 @@
                 toast.classList.remove('show');
                 toast.addEventListener('transitionend', () => {
                     toast.remove();
-                }, { once: true });
+                }, {once: true});
             }
         }
     </script>
@@ -83,7 +83,7 @@
     <script language="JavaScript">
         setInterval(() => {
             var td = document.getElementById('exchange_rates');
-            fetch('http://localhost:8088/exchange', {
+            fetch([[${currencyUri}]] + '/exchange', {
                 method: 'GET',
                 mode: 'cors'
             })
@@ -105,48 +105,48 @@
                 .catch(error => td.innerHTML = error);
         }, 1000);
     </script>
-<!--    <script language="JavaScript">-->
-<!--        async function fetchRates() {-->
-<!--            const td = document.getElementById('exchange_rates');-->
-<!--            const urls = [-->
-<!--                'http://localhost:8080/exchange/rate',-->
-<!--                'http://gateway:8080/exchange/rate'-->
-<!--            ];-->
+    <!--    <script language="JavaScript">-->
+    <!--        async function fetchRates() {-->
+    <!--            const td = document.getElementById('exchange_rates');-->
+    <!--            const urls = [-->
+    <!--                'http://localhost:8080/exchange/rate',-->
+    <!--                'http://gateway:8080/exchange/rate'-->
+    <!--            ];-->
 
-<!--            for (let url of urls) {-->
-<!--                try {-->
-<!--                    const response = await fetch(url, { method: 'GET'});-->
-<!--                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);-->
-<!--                    const data = await response.json();-->
-<!--                    return data.rate;-->
-<!--                } catch (err) {-->
-<!--                    console.warn(`Не удалось получить данные по адресу ${url}:`, err);-->
-<!--                }-->
-<!--            }-->
+    <!--            for (let url of urls) {-->
+    <!--                try {-->
+    <!--                    const response = await fetch(url, { method: 'GET'});-->
+    <!--                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);-->
+    <!--                    const data = await response.json();-->
+    <!--                    return data.rate;-->
+    <!--                } catch (err) {-->
+    <!--                    console.warn(`Не удалось получить данные по адресу ${url}:`, err);-->
+    <!--                }-->
+    <!--            }-->
 
-<!--            throw new Error('Не удалось получить данные ни с одного источника');-->
-<!--        }-->
+    <!--            throw new Error('Не удалось получить данные ни с одного источника');-->
+    <!--        }-->
 
-<!--        setInterval(async () => {-->
-<!--            const td = document.getElementById('exchange_rates');-->
+    <!--        setInterval(async () => {-->
+    <!--            const td = document.getElementById('exchange_rates');-->
 
-<!--            try {-->
-<!--                const rates = await fetchRates();-->
-<!--                let table = `-->
-<!--                <table style="width:100%;margin:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">-->
-<!--                    <tr><th colspan="2">Курсы валют по отношению к рублю</th></tr>-->
-<!--                    <tr><th>Валюта</th><th>Курс</th></tr>-->
-<!--            `;-->
-<!--                rates.forEach(rate => {-->
-<!--                    table += `<tr><td>${rate.currency}</td><td>${rate.value}</td></tr>`;-->
-<!--                });-->
-<!--                table += '</table>';-->
-<!--                td.innerHTML = table;-->
-<!--            } catch (error) {-->
-<!--                td.innerHTML = `<p style="color:red;">Ошибка загрузки данных: ${error.message}</p>`;-->
-<!--            }-->
-<!--        }, 1000);-->
-<!--    </script>-->
+    <!--            try {-->
+    <!--                const rates = await fetchRates();-->
+    <!--                let table = `-->
+    <!--                <table style="width:100%;margin:auto;border-radius:2%;padding:10px;background-color:whitesmoke;">-->
+    <!--                    <tr><th colspan="2">Курсы валют по отношению к рублю</th></tr>-->
+    <!--                    <tr><th>Валюта</th><th>Курс</th></tr>-->
+    <!--            `;-->
+    <!--                rates.forEach(rate => {-->
+    <!--                    table += `<tr><td>${rate.currency}</td><td>${rate.value}</td></tr>`;-->
+    <!--                });-->
+    <!--                table += '</table>';-->
+    <!--                td.innerHTML = table;-->
+    <!--            } catch (error) {-->
+    <!--                td.innerHTML = `<p style="color:red;">Ошибка загрузки данных: ${error.message}</p>`;-->
+    <!--            }-->
+    <!--        }, 1000);-->
+    <!--    </script>-->
 
 </head>
 

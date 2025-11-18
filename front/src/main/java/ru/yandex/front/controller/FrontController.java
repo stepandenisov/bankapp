@@ -1,6 +1,7 @@
 package ru.yandex.front.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,10 @@ public class FrontController {
 
     private final UserService userService;
 
+    @Value("${currency.uri}")
+    private final String currencyUri;
+
+
     @GetMapping(path = {"", "/"})
     public String main(Model model) {
         List<Account> accounts = accountService.getAccounts();
@@ -34,6 +39,7 @@ public class FrontController {
         model.addAttribute("currency", currencies);
         model.addAttribute("userCurrency", userCurrencies);
         model.addAttribute("users", userService.getUsers());
+        model.addAttribute("currencyUri", currencyUri);
         return "main";
     }
 
