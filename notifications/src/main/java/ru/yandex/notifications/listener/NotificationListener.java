@@ -18,6 +18,8 @@ public class NotificationListener {
         try {
             notificationService.send(request);
             ack.acknowledge();
-        } catch (Exception ignored){ }
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 }
