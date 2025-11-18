@@ -81,9 +81,12 @@
         });
     </script>
     <script language="JavaScript">
+
+        const currencyUrl = /*[[${currencyUri}]]*/ "http://localhost";
+
         setInterval(() => {
             var td = document.getElementById('exchange_rates');
-            fetch([[${currencyUri}]] + '/exchange', {
+            fetch(currencyUrl + '/exchange', {
                 method: 'GET',
                 mode: 'cors'
             })
