@@ -90,7 +90,7 @@ pipeline {
                 script {
                     run("""
                         helm upgrade --install kafka -n bankapp -f ./helm/kafka/values.yaml ./helm/kafka
-                        kubectl rollout status statefulset/kafka -n ${NAMESPACE} --timeout=120s
+                        kubectl rollout status statefulset/kafka --timeout=120s
                     """)
                 }
             }
