@@ -52,10 +52,9 @@ public class RestTemplateConfiguration {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate(OAuth2AuthorizedClientManager authorizedClientManager) {
-        RestTemplate restTemplate = new RestTemplate();
+    public RestTemplate restTemplate(RestTemplateBuilder builder, OAuth2AuthorizedClientManager authorizedClientManager) {
 
-        restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+        builder.errorHandler(new DefaultResponseErrorHandler() {
             @Override
             public void handleError(ClientHttpResponse response) throws IOException {
                 if (response.getStatusCode() == HttpStatus.BAD_REQUEST) {
@@ -65,29 +64,27 @@ public class RestTemplateConfiguration {
             }
         });
 
-        restTemplate.setInterceptors(
+        builder.additionalInterceptors(
                 Collections.singletonList((request, body, execution) -> {
-                    UsernamePasswordAuthenticationToken principal =
-                            new UsernamePasswordAuthenticationToken("notifications-service", "N/A");
+                    if (!request.getHeaders().containsKey("Authorization")) {
+                        OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
+                                .withClientRegistrationId("keycloak")
+                                .principal("notifications-service")
+                                .build();
 
-                    OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
-                            .withClientRegistrationId("keycloak")
-                            .principal(principal)
-                            .build();
+                        OAuth2AuthorizedClient client =
+                                authorizedClientManager.authorize(authRequest);
 
-                    OAuth2AuthorizedClient client = authorizedClientManager.authorize(authRequest);
+                        if (client == null) {
+                            throw new IllegalStateException("Cannot authorize OAuth2 client");
+                        }
 
-                    if (client == null) {
-                        throw new IllegalStateException("Cannot authorize OAuth2 client");
+                        OAuth2AccessToken accessToken = client.getAccessToken();
+                        request.getHeaders().add("Authorization", "Bearer " + accessToken.getTokenValue());
                     }
-
-                    OAuth2AccessToken accessToken = client.getAccessToken();
-                    request.getHeaders().add("Authorization", "Bearer " + accessToken.getTokenValue());
-
                     return execution.execute(request, body);
-                })
-        );
+                }));
 
-        return restTemplate;
+        return builder.build();
     }
 }

@@ -46,10 +46,9 @@ public class RestTemplateConfiguration {
 
     @Bean
     @LoadBalanced
-    public RestTemplate restTemplate(OAuth2AuthorizedClientManager authorizedClientManager) {
-        RestTemplate restTemplate = new RestTemplate();
+    public RestTemplate restTemplate(RestTemplateBuilder builder, OAuth2AuthorizedClientManager authorizedClientManager) {
 
-        restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+        builder.errorHandler(new DefaultResponseErrorHandler() {
             @Override
             public void handleError(ClientHttpResponse response) throws IOException {
                 if (response.getStatusCode() == HttpStatus.BAD_REQUEST) {
@@ -59,7 +58,7 @@ public class RestTemplateConfiguration {
             }
         });
 
-        restTemplate.setInterceptors(
+        builder.additionalInterceptors(
                 Collections.singletonList((request, body, execution) -> {
                     if (!request.getHeaders().containsKey("Authorization")) {
                         OAuth2AuthorizeRequest authRequest = OAuth2AuthorizeRequest
@@ -80,6 +79,6 @@ public class RestTemplateConfiguration {
                     return execution.execute(request, body);
                 }));
 
-        return restTemplate;
+        return builder.build();
     }
 }
