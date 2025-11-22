@@ -13,6 +13,7 @@ import ru.yandex.account.model.dto.RegisterRequest;
 import ru.yandex.account.model.User;
 import ru.yandex.account.model.dto.LoginRequest;
 import ru.yandex.account.model.dto.TokenResponse;
+import ru.yandex.account.service.AuthService;
 import ru.yandex.account.service.JwtService;
 import ru.yandex.account.service.UserService;
 
@@ -28,17 +29,12 @@ public class AuthController {
 
     private final UserService userService;
 
+    private final AuthService authService;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
-
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtService.createToken(userDetails);
-
-            return ResponseEntity.ok(new TokenResponse(token));
+            return ResponseEntity.ok(authService.login(request));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Неверное имя пользователя или пароль");
         }
@@ -46,30 +42,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        if (userService.existsByUsername(request.getUsername())) {
+        if(authService.register(request)){
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body("Пользователь успешно зарегистрирован");
+        } else {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body("Пользователь с таким логином уже существует");
+                    .body("Ошибка регистрации");
         }
-
-        if(!Objects.equals(request.getPassword(), request.getConfirmPassword())){
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Пароли не совпадают");
-        }
-
-        User user = new User(null,
-                request.getUsername(),
-                request.getPassword(),
-                request.getFullName(),
-                request.getBirthday(),
-                "USER",
-                null);
-
-        userService.save(user);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body("Пользователь успешно зарегистрирован");
     }
 }

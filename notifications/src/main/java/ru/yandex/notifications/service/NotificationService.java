@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,6 +27,8 @@ public class NotificationService {
     @Value("${front.uri}")
     private String frontUri;
 
+    private final MeterRegistry registry;
+
 
     public void send(NotificationRequest request) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("frontNotificationApi");
@@ -45,7 +48,10 @@ public class NotificationService {
 
         try {
             protectedCall.get();
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            registry.counter(
+                    "notification_fail"
+            ).increment();
         }
     }
 
