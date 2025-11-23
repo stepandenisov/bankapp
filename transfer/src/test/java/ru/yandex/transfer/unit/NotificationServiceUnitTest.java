@@ -1,5 +1,6 @@
 package ru.yandex.transfer.unit;
 
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -16,9 +17,14 @@ class NotificationServiceUnitTest {
     @Mock
     private KafkaTemplate<String, NotificationRequest> kafkaTemplate;
 
+    @Mock
+    private Tracer tracer;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
     }
 
     @Test

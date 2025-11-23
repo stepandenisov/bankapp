@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,8 @@ class BlockerServiceUnitTest {
 
     private CircuitBreaker circuitBreaker;
     private Retry retry;
+    @Mock
+    private Tracer tracer;
 
     @BeforeEach
     void setUp() {
@@ -40,8 +43,9 @@ class BlockerServiceUnitTest {
         retry = Retry.ofDefaults("blockerApi");
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(circuitBreaker);
         when(retryRegistry.retry(anyString())).thenReturn(retry);
-
-        blockerService = new BlockerService(restTemplate, cbRegistry, retryRegistry);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
+        blockerService = new BlockerService(restTemplate, cbRegistry, retryRegistry, tracer);
         try {
             var field = BlockerService.class.getDeclaredField("blockerUri");
             field.setAccessible(true);

@@ -1,5 +1,6 @@
 package ru.yandex.account.unit.service;
 
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -26,11 +27,16 @@ class AccountServiceUnitTest {
 
     private User currentUser;
 
+    private Tracer tracer;
+
     @BeforeEach
     void setUp() {
         accountRepository = mock(AccountRepository.class);
         userService = mock(UserService.class);
-        accountService = new AccountService(accountRepository, userService);
+        tracer = mock(Tracer.class);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
+        accountService = new AccountService(accountRepository, userService, tracer);
 
         currentUser = new User(1L, "user", "pass", "Full Name", null, "USER", null);
         when(userService.getCurrentUser()).thenReturn(currentUser);

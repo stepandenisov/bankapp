@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +29,8 @@ class CurrencyServiceUnitTest {
     private RetryRegistry retryRegistry;
     private CurrencyService currencyService;
 
+    private Tracer tracer;
+
     private CircuitBreaker cb;
     private Retry retry;
 
@@ -44,7 +47,10 @@ class CurrencyServiceUnitTest {
         when(cbRegistry.circuitBreaker("currencyApi")).thenReturn(cb);
         when(retryRegistry.retry("currencyApi")).thenReturn(retry);
 
-        currencyService = new CurrencyService(restTemplate, cbRegistry, retryRegistry);
+        tracer = mock(Tracer.class);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
+        currencyService = new CurrencyService(restTemplate, cbRegistry, retryRegistry, tracer);
         currencyService.setExchangeUri("http://test");
     }
 

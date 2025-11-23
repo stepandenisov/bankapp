@@ -1,5 +1,6 @@
 package ru.yandex.account.unit.service;
 
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,12 +32,17 @@ class UserServiceUnitTest {
 
     private User user;
 
+    private Tracer tracer;
+
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
         notificationService = mock(NotificationService.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        userService = new UserService(userRepository, notificationService, passwordEncoder);
+        tracer = mock(Tracer.class);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
+        userService = new UserService(userRepository, notificationService, passwordEncoder, tracer);
 
         user = new User(1L, "user", "pass", "Full Name", LocalDate.of(2000, 1, 1), "USER", null);
 

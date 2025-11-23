@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -40,6 +41,9 @@ class UserServiceUnitTest {
     private RetryRegistry retryRegistry;
 
     @Mock
+    private Tracer tracer;
+
+    @Mock
     private Retry retry;
 
     @InjectMocks
@@ -54,6 +58,9 @@ class UserServiceUnitTest {
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(auth);
         SecurityContextHolder.setContext(securityContext);
+
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
 
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(circuitBreaker);
         when(circuitBreaker.decorateSupplier(any(Supplier.class)))

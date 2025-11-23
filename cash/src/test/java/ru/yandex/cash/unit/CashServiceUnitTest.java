@@ -1,9 +1,10 @@
-package ru.yandex.cash.service;
+package ru.yandex.cash.unit;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.cash.configuration.TestSecurityConfig;
 import ru.yandex.cash.model.CashRequest;
+import ru.yandex.cash.service.BlockerService;
+import ru.yandex.cash.service.CashService;
+import ru.yandex.cash.service.NotificationService;
 
 import java.util.Collections;
 
@@ -38,6 +42,8 @@ class CashServiceUnitTest {
     private CircuitBreakerRegistry cbRegistry;
     @Mock
     private RetryRegistry retryRegistry;
+    @Mock
+    private Tracer tracer;
 
     @InjectMocks
     private CashService cashService;
@@ -52,6 +58,8 @@ class CashServiceUnitTest {
         retry = Retry.ofDefaults("test");
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(cb);
         when(retryRegistry.retry(anyString())).thenReturn(retry);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
 
         var auth = new UsernamePasswordAuthenticationToken("user", "pass", Collections.emptyList());
         auth.setDetails("mockToken");
