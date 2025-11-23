@@ -64,7 +64,7 @@ pipeline {
                             --from-literal=POSTGRES_DB=yandex \
                             --dry-run=client -o yaml | kubectl apply -f -
                         kubectl create configmap keycloak-realm \
-                            --from-file=realm-export.json=./keycloak.json -n ${NAMESPACE} \
+                            --from-file=realm-export.json=./realm-export.json -n ${NAMESPACE} \
                             --dry-run=client -o yaml | kubectl apply -f -
                     """)
                 }
