@@ -23,35 +23,35 @@ pipeline {
             }
         }
 
-//         stage('Build Docker images') {
-//             steps {
-//                 script {
-//                     if (isUnix()) {
-//                         run("""
-//                             eval \$(minikube -p minikube docker-env)
-//                             for svc in config-server eureka gateway account blocker cash exchange exchange-generator transfer front notifications; do
-//                                 docker build -t bankapp-\$svc:local -f \$svc/Dockerfile .
-//                             done
-//                         """)
-//                     } else {
-//                         run("""
-//                             for /f "tokens=*" %%i in ('minikube -p minikube docker-env --shell cmd') do %%i
-//                             docker build -t bankapp-config-server:local -f config-server/Dockerfile .
-//                             docker build -t bankapp-eureka:local -f eureka/Dockerfile .
-//                             docker build -t bankapp-gateway:local -f gateway/Dockerfile .
-//                             docker build -t bankapp-account:local -f account/Dockerfile .
-//                             docker build -t bankapp-blocker:local -f blocker/Dockerfile .
-//                             docker build -t bankapp-cash:local -f cash/Dockerfile .
-//                             docker build -t bankapp-exchange:local -f exchange/Dockerfile .
-//                             docker build -t bankapp-exchange-generator:local -f exchange-generator/Dockerfile .
-//                             docker build -t bankapp-transfer:local -f transfer/Dockerfile .
-//                             docker build -t bankapp-front:local -f front/Dockerfile .
-//                             docker build -t bankapp-notification:local -f notifications/Dockerfile .
-//                         """)
-//                     }
-//                 }
-//             }
-//         }
+        stage('Build Docker images') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        run("""
+                            eval \$(minikube -p minikube docker-env)
+                            for svc in config-server eureka gateway account blocker cash exchange exchange-generator transfer front notifications; do
+                                docker build -t bankapp-\$svc:local -f \$svc/Dockerfile .
+                            done
+                        """)
+                    } else {
+                        run("""
+                            for /f "tokens=*" %%i in ('minikube -p minikube docker-env --shell cmd') do %%i
+                            docker build -t bankapp-config-server:local -f config-server/Dockerfile .
+                            docker build -t bankapp-eureka:local -f eureka/Dockerfile .
+                            docker build -t bankapp-gateway:local -f gateway/Dockerfile .
+                            docker build -t bankapp-account:local -f account/Dockerfile .
+                            docker build -t bankapp-blocker:local -f blocker/Dockerfile .
+                            docker build -t bankapp-cash:local -f cash/Dockerfile .
+                            docker build -t bankapp-exchange:local -f exchange/Dockerfile .
+                            docker build -t bankapp-exchange-generator:local -f exchange-generator/Dockerfile .
+                            docker build -t bankapp-transfer:local -f transfer/Dockerfile .
+                            docker build -t bankapp-front:local -f front/Dockerfile .
+                            docker build -t bankapp-notification:local -f notifications/Dockerfile .
+                        """)
+                    }
+                }
+            }
+        }
 
         stage('Prepare Kubernetes') {
             steps {
@@ -101,6 +101,8 @@ pipeline {
             steps {
                 script {
                     run("""
+                        helm upgrade --install config-server -f ./helm/bankapp/values-config-server.yaml ./helm/bankapp
+                        helm upgrade --install keycloak -f ./helm/bankapp/values-keycloak.yaml ./helm/bankapp
                         helm upgrade --install zipkin ./helm/zipkin
                         helm upgrade --install elasticsearch ./helm/elasticsearch
                         helm upgrade --install prometheus ./helm/prometheus
@@ -108,6 +110,16 @@ pipeline {
                         helm upgrade --install kibana ./helm/kibana
                         helm upgrade --install logstash ./helm/logstash/
                         helm upgrade --install postgres -f ./helm/bankapp/values-postgres.yaml ./helm/bankapp
+                        helm upgrade --install eureka -f ./helm/bankapp/values-eureka.yaml ./helm/bankapp
+                        helm upgrade --install account -f ./helm/bankapp/values-account.yaml ./helm/bankapp
+                        helm upgrade --install front -f ./helm/bankapp/values-front.yaml ./helm/bankapp
+                        helm upgrade --install blocker -f ./helm/bankapp/values-blocker.yaml ./helm/bankapp
+                        helm upgrade --install cash -f ./helm/bankapp/values-cash.yaml ./helm/bankapp
+                        helm upgrade --install exchange -f ./helm/bankapp/values-exchange.yaml ./helm/bankapp
+                        helm upgrade --install exchange-generator -f ./helm/bankapp/values-exchange-generator.yaml ./helm/bankapp
+                        helm upgrade --install gateway -f ./helm/bankapp/values-gateway.yaml ./helm/bankapp
+                        helm upgrade --install notification -f ./helm/bankapp/values-notification.yaml ./helm/bankapp
+                        helm upgrade --install transfer -f ./helm/bankapp/values-transfer.yaml ./helm/bankapp
                     """)
                 }
             }
