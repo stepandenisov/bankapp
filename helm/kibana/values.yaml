@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: kibana
+  tag: "9.2.1"
+  pullPolicy: IfNotPresent
+
+elasticsearchHosts: "http://elasticsearch.bankapp.svc.cluster.local:9200"
+
+resources:
+  requests:
+    memory: "1Gi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "1"
+
+service:
+  type: ClusterIP
+  port: 5601
+
