@@ -2,7 +2,7 @@
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
         <Property name="appName">exchange</Property>
-        <Property name="kafka.bootstrap.servers">host.docker.internal:9092</Property>
+        <Property name="kafka.bootstrap.servers">kafka.bankapp.svc.cluster.local:9092</Property>
         <Property name="kafka.topic">exchange-logs</Property>
     </Properties>
 
