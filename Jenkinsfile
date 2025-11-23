@@ -111,8 +111,6 @@ pipeline {
                         helm upgrade --install logstash ./helm/logstash/
                         helm upgrade --install postgres -f ./helm/bankapp/values-postgres.yaml ./helm/bankapp
                         helm upgrade --install eureka -f ./helm/bankapp/values-eureka.yaml ./helm/bankapp
-                        helm upgrade --install account -f ./helm/bankapp/values-account.yaml ./helm/bankapp
-                        helm upgrade --install front -f ./helm/bankapp/values-front.yaml ./helm/bankapp
                     """)
                 }
             }
