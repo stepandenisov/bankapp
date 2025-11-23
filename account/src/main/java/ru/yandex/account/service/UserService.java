@@ -1,7 +1,11 @@
 package ru.yandex.account.service;
 
+import io.micrometer.tracing.Tracer;
 import jakarta.ws.rs.BadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +34,10 @@ public class UserService implements UserDetailsService {
 
     private final PasswordEncoder passwordEncoder;
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
+    private final Tracer tracer;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
@@ -49,7 +57,13 @@ public class UserService implements UserDetailsService {
     public User getCurrentUser() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.error("There is no user in security context.");
+                    ThreadContext.clearAll();
+                    return new UsernameNotFoundException("Пользователь не найден");
+                });
     }
 
     public UserDto getCurrentUserDto() {
@@ -71,11 +85,20 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         notificationService.send("Пользователь создан.");
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("User: " + user.getUsername() + " created.");
+        ThreadContext.clearAll();
     }
 
     public void deleteCurrentUser(){
-        userRepository.delete(getCurrentUser());
+        User user = getCurrentUser();
+        userRepository.delete(user);
         notificationService.send("Пользователь удален.");
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("User: " + user.getUsername() + " deleted.");
+        ThreadContext.clearAll();
     }
 
     public void editPassword(String password){
@@ -83,6 +106,10 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
         notificationService.send("Пароль изменен.");
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("User " + user.getUsername() + " changes password.");
+        ThreadContext.clearAll();
     }
 
     public void editUser(EditUserInfoRequest userInfoDto){
@@ -95,5 +122,9 @@ public class UserService implements UserDetailsService {
         user.setBirthday(userInfoDto.getBirthday());
         userRepository.save(user);
         notificationService.send("Данные изменены.");
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("User: " + user.getUsername() + " changes info.");
+        ThreadContext.clearAll();
     }
 }

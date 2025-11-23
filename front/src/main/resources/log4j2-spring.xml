@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="appName">front</Property>
+        <Property name="kafka.bootstrap.servers">host.docker.internal:9092</Property>
+        <Property name="kafka.topic">front-logs</Property>
+    </Properties>
+
+    <Appenders>
+
+        <Kafka name="KafkaAppender" topic="${kafka.topic}">
+            <Property name="bootstrap.servers">${kafka.bootstrap.servers}</Property>
+
+            <JsonLayout
+                    compact="true"
+                    eventEol="true"
+                    includeMdc="true"
+                    stacktraceAsString="true">
+                <KeyValuePair key="traceId" value="${ctx:traceId}"/>
+                <KeyValuePair key="spanId" value="${ctx:spanId}"/>
+            </JsonLayout>
+        </Kafka>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{1} - %m%n"/>
+        </Console>
+
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="KafkaAppender"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

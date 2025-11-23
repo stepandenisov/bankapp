@@ -5,8 +5,12 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.decorators.Decorators;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -30,6 +34,10 @@ public class CurrencyService {
     @Setter
     private String exchangeUri;
 
+    private static final Logger log = LoggerFactory.getLogger(CurrencyService.class);
+
+    private final Tracer tracer;
+
     public ExchangeRateResponse getExchangeRate(){
         CircuitBreaker cb = cbRegistry.circuitBreaker("currencyApi");
         Retry retry = retryRegistry.retry("currencyApi");
@@ -42,7 +50,13 @@ public class CurrencyService {
         return Decorators.ofSupplier(supplier)
                 .withCircuitBreaker(cb)
                 .withRetry(retry)
-                .withFallback(ex -> new ExchangeRateResponse(List.of()))
+                .withFallback(ex -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.warn("Cannot get exchange rate");
+                    ThreadContext.clearAll();
+                    return new ExchangeRateResponse(List.of());
+                })
                 .get();
     }
 
@@ -58,7 +72,13 @@ public class CurrencyService {
         return Decorators.ofSupplier(supplier)
                 .withCircuitBreaker(cb)
                 .withRetry(retry)
-                .withFallback(ex -> List.of())
+                .withFallback(ex -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.warn("Cannot get currencies.");
+                    ThreadContext.clearAll();
+                    return List.of();
+                })
                 .get();
     }
 

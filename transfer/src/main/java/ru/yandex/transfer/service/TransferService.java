@@ -5,10 +5,14 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.tracing.Tracer;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +47,11 @@ public class TransferService {
 
     @Value("${exchange.uri}")
     private String exchangeUri;
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
+    private final Tracer tracer;
+
 
     public void recordFailedTransfer(String fromAcc, String toAcc) {
 
@@ -110,6 +119,10 @@ public class TransferService {
         try {
             withdrawDecorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error^ cannot withdraw.");
+            ThreadContext.clearAll();
             recordFailedTransfer(fromAccountId.toString(), toAccountId.toString());
             notificationService.send("Ошибка перевода.");
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
@@ -117,6 +130,10 @@ public class TransferService {
         try {
             topUpDecorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error: cannot top up.");
+            ThreadContext.clearAll();
             recordFailedTransfer(fromAccountId.toString(), toAccountId.toString());
             Supplier<Boolean> revertTopUpSupplier = () -> {
                 HttpHeaders headers = new HttpHeaders();
@@ -142,9 +159,17 @@ public class TransferService {
                 revertTopUpDecorated.get();
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
             } catch (Exception e2) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.warn("Transfer error: cannot revert withdraw.");
+                ThreadContext.clearAll();
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
             }
         }
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("Transfer success.");
+        ThreadContext.clearAll();
         notificationService.send("Перевод осуществлен.");
         return true;
     }
@@ -178,6 +203,10 @@ public class TransferService {
         try {
             return decorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error: cannot convert amount.");
+            ThreadContext.clearAll();
             recordFailedTransfer(fromAccountId, toAccountId);
             notificationService.send("Ошибка перевода.");
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
@@ -213,6 +242,10 @@ public class TransferService {
                 .map(Account::getCurrency)
                 .findFirst()
                 .orElseThrow(() -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.info("Transfer failed: user have no account with id: " + accountId.toString());
+                    ThreadContext.clearAll();
                     notificationService.send("У Вас нет такого счета");
                     return new ResponseStatusException(HttpStatus.NOT_FOUND, "exchange failed");
                 });
@@ -221,6 +254,10 @@ public class TransferService {
     public boolean selfTransfer(SelfTransferRequest request) {
         try {
             if (blockerService.checkSuspicious()) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Suspicious self transfer.");
+                ThreadContext.clearAll();
                 recordSuspiciousTransfer(request.getFromAccountId().toString(), request.getToAccountId().toString());
                 notificationService.send("Подозрительная операция заблокирована.");
                 return false;
@@ -238,6 +275,10 @@ public class TransferService {
                     .map(Account::getCurrency)
                     .findFirst()
                     .orElseThrow(() -> {
+                        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                        log.info("Transfer failed: user have no account with id: " + request.getToAccountId());
+                        ThreadContext.clearAll();
                         notificationService.send("У Вас нет такого счета");
                         return new ResponseStatusException(HttpStatus.NOT_FOUND, "exchange failed");
                     });
@@ -247,6 +288,10 @@ public class TransferService {
 
             return transfer(request.getFromAccountId(), request.getToAccountId(), request.getAmount(), toAmount, token);
         } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Self transfer error.");
+            ThreadContext.clearAll();
             recordFailedTransfer(request.getFromAccountId().toString(), request.getToAccountId().toString());
             return false;
         }
@@ -278,11 +323,19 @@ public class TransferService {
                                 params)
                         .getBody();
             } catch (Exception e) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Recipient has no account with such currency.");
+                ThreadContext.clearAll();
                 notificationService.send("У получателя нет счета с такой валютой");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "exchange failed");
             }
 
             if (blockerService.checkSuspicious()) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Suspicious external transfer.");
+                ThreadContext.clearAll();
                 recordSuspiciousTransfer(request.getFromAccountId().toString(), toAccountId.toString());
                 notificationService.send("Подозрительная операция заблокирована.");
                 return false;
@@ -293,6 +346,10 @@ public class TransferService {
 
             return transfer(request.getFromAccountId(), toAccountId, request.getAmount(), toAmount, token);
         } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("External transfer error.");
+            ThreadContext.clearAll();
             recordFailedTransfer(request.getFromAccountId().toString(), request.getUserId().toString() + "_" + request.getToCurrency().toString());
             return false;
         }
