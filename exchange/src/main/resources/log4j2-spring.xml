@@ -34,7 +34,7 @@
 
         <Root level="info">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="Kafka"/>
+            <AppenderRef ref="KafkaAppender"/>
         </Root>
 
     </Loggers>
