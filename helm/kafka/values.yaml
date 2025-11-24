@@ -2,6 +2,6 @@ replicaCount: 1
 
 kafka:
   image: "apache/kafka:4.1.1"
-  storage: 5Gi
+  storage: 1Gi
   nodeId: 1
   advertisedHost: "kafka"  

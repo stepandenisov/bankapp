@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="appName">cash</Property>
+        <Property name="kafka.bootstrap.servers">kafka.bankapp.svc.cluster.local:9092</Property>
+        <Property name="kafka.topic">cash-logs</Property>
+    </Properties>
+
+    <Appenders>
+
+        <Kafka name="KafkaAppender" topic="${kafka.topic}">
+            <Property name="bootstrap.servers">${kafka.bootstrap.servers}</Property>
+
+            <JsonLayout
+                    compact="true"
+                    eventEol="true"
+                    includeMdc="true"
+                    stacktraceAsString="true">
+                <KeyValuePair key="traceId" value="${ctx:traceId}"/>
+                <KeyValuePair key="spanId" value="${ctx:spanId}"/>
+            </JsonLayout>
+        </Kafka>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{1} - %m%n"/>
+        </Console>
+
+    </Appenders>
+
+    <Loggers>
+        <Logger name="org.apache.kafka" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="KafkaAppender"/>
+        </Root>
+
+    </Loggers>
+
+
+</Configuration>

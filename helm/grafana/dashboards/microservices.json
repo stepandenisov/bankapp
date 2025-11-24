@@ -1,0 +1,109 @@
+{
+  "id": null,
+  "uid": "microservices-dashboard",
+  "title": "Microservices Overview",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Successful Logins",
+      "targets": [
+        {
+          "expr": "auth_login_total{status=\"success\"}",
+          "legendFormat": "{{username}}"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Failed Logins",
+      "targets": [
+        {
+          "expr": "auth_login_total{status=\"fail\"}",
+          "legendFormat": "{{username}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Failed Transfers",
+      "targets": [
+        {
+          "expr": "transfer_fail_total",
+          "legendFormat": "{{from_account}} → {{to_account}}"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 6, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Suspicious Transfers",
+      "targets": [
+        {
+          "expr": "transfer_suspicious_total",
+          "legendFormat": "{{from_account}} → {{to_account}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 6, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Notification Failures",
+      "targets": [
+        {
+          "expr": "notification_fail_total",
+          "legendFormat": "failures"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "Exchange Last Update (seconds)",
+      "targets": [
+        {
+          "expr": "exchange_last_update_seconds",
+          "legendFormat": "last update"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "HTTP Requests Count",
+      "targets": [
+        {
+          "expr": "http_server_requests_seconds_count",
+          "legendFormat": "{{uri}}"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 18, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "JVM Memory Used",
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes",
+          "legendFormat": "{{area}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 18, "w": 12, "h": 6}
+    },
+    {
+      "type": "graph",
+      "title": "CPU Usage",
+      "targets": [
+        {
+          "expr": "process_cpu_usage",
+          "legendFormat": "CPU"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 24, "w": 12, "h": 6}
+    }
+  ]
+}

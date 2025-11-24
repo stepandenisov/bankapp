@@ -4,18 +4,21 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.tracing.Tracer;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.transfer.model.*;
 
 import java.util.List;
@@ -37,11 +40,36 @@ public class TransferService {
     private final CircuitBreakerRegistry cbRegistry;
     private final RetryRegistry retryRegistry;
 
+    private final MeterRegistry registry;
+
     @Value("${account.uri}")
     String accountUri;
 
     @Value("${exchange.uri}")
     private String exchangeUri;
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
+    private final Tracer tracer;
+
+
+    public void recordFailedTransfer(String fromAcc, String toAcc) {
+
+        registry.counter(
+                "transfer_fail",
+                "from_account", fromAcc,
+                "to_account", toAcc
+        ).increment();
+    }
+
+    public void recordSuspiciousTransfer(String fromAcc, String toAcc) {
+
+        registry.counter(
+                "transfer_suspicious",
+                "from_account", fromAcc,
+                "to_account", toAcc
+        ).increment();
+    }
 
 
     private boolean transfer(Long fromAccountId,
@@ -91,12 +119,22 @@ public class TransferService {
         try {
             withdrawDecorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error^ cannot withdraw.");
+            ThreadContext.clearAll();
+            recordFailedTransfer(fromAccountId.toString(), toAccountId.toString());
             notificationService.send("Ошибка перевода.");
-            throw new InternalServerErrorException();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
         }
         try {
             topUpDecorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error: cannot top up.");
+            ThreadContext.clearAll();
+            recordFailedTransfer(fromAccountId.toString(), toAccountId.toString());
             Supplier<Boolean> revertTopUpSupplier = () -> {
                 HttpHeaders headers = new HttpHeaders();
 //                headers.set("Authorization", "Bearer " + token);
@@ -119,17 +157,29 @@ public class TransferService {
             notificationService.send("Ошибка перевода.");
             try {
                 revertTopUpDecorated.get();
-                throw new InternalServerErrorException();
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
             } catch (Exception e2) {
-                throw new InternalServerErrorException();
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.warn("Transfer error: cannot revert withdraw.");
+                ThreadContext.clearAll();
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
             }
         }
+        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+        log.info("Transfer success.");
+        ThreadContext.clearAll();
         notificationService.send("Перевод осуществлен.");
         return true;
     }
 
 
-    private Double getConvertedAmount(Currency fromCurrency, Currency toCurrency, Double amount) {
+    private Double getConvertedAmount(Currency fromCurrency,
+                                      Currency toCurrency,
+                                      Double amount,
+                                      String fromAccountId,
+                                      String toAccountId) {
         Supplier<Double> supplier = () -> {
             Map<String, Object> params = Map.of(
                     "from", fromCurrency,
@@ -153,8 +203,13 @@ public class TransferService {
         try {
             return decorated.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Transfer error: cannot convert amount.");
+            ThreadContext.clearAll();
+            recordFailedTransfer(fromAccountId, toAccountId);
             notificationService.send("Ошибка перевода.");
-            throw new InternalServerErrorException();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "exchange failed");
         }
     }
 
@@ -187,304 +242,116 @@ public class TransferService {
                 .map(Account::getCurrency)
                 .findFirst()
                 .orElseThrow(() -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.info("Transfer failed: user have no account with id: " + accountId.toString());
+                    ThreadContext.clearAll();
                     notificationService.send("У Вас нет такого счета");
-                    return new NotFoundException("У пользователя нет такого счета");
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "exchange failed");
                 });
     }
 
     public boolean selfTransfer(SelfTransferRequest request) {
-        if (blockerService.checkSuspicious()) {
-            notificationService.send("Подозрительная операция заблокирована.");
-            return false;
-        }
-
-        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
-
-
-        List<Account> accounts = getSelfAccounts();
-
-        Currency fromCurrency = getCurrencyOfAccountById(accounts, request.getFromAccountId());
-
-        Currency toCurrency = accounts.stream()
-                .filter(a -> Objects.equals(a.getId(), request.getToAccountId()))
-                .map(Account::getCurrency)
-                .findFirst()
-                .orElseThrow(() -> {
-                    notificationService.send("У Вас нет такого счета");
-                    return new NotFoundException("У пользователя нет такого счета");
-                });
-
-        Double toAmount = getConvertedAmount(fromCurrency, toCurrency, request.getAmount());
-
-        return transfer(request.getFromAccountId(), request.getToAccountId(), request.getAmount(), toAmount, token);
-    }
-
-    public boolean externalTransfer(ExternalTransferRequest request) throws BadRequestException {
-        if (blockerService.checkSuspicious()) {
-            notificationService.send("Подозрительная операция заблокирована.");
-            return false;
-        }
-
-        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
-
-        List<Account> accounts = getSelfAccounts();
-
-        Currency fromCurrency = getCurrencyOfAccountById(accounts, request.getFromAccountId());
-
-        Map<String, Object> params = Map.of(
-                "userId", request.getUserId(),
-                "currency", request.getToCurrency()
-        );
-
-        Long toAccountId;
         try {
-            toAccountId = restTemplate.exchange(
-                            accountUri + "/accounts/findAccountId?userId={userId}&currency={currency}",
-                            HttpMethod.GET,
-                            new HttpEntity<>(new HttpHeaders() {{
-                                set("Authorization", "Jwt " + token);
-                                setContentType(MediaType.APPLICATION_JSON);
-                            }}),
-                            Long.class,
-                            params)
-                    .getBody();
-        } catch (Exception e) {
-            notificationService.send("У получателя нет счета с такой валютой");
-            throw new BadRequestException("У пользователя нет счета с такой валютой");
+            if (blockerService.checkSuspicious()) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Suspicious self transfer.");
+                ThreadContext.clearAll();
+                recordSuspiciousTransfer(request.getFromAccountId().toString(), request.getToAccountId().toString());
+                notificationService.send("Подозрительная операция заблокирована.");
+                return false;
+            }
+
+            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
+
+
+            List<Account> accounts = getSelfAccounts();
+
+            Currency fromCurrency = getCurrencyOfAccountById(accounts, request.getFromAccountId());
+
+            Currency toCurrency = accounts.stream()
+                    .filter(a -> Objects.equals(a.getId(), request.getToAccountId()))
+                    .map(Account::getCurrency)
+                    .findFirst()
+                    .orElseThrow(() -> {
+                        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                        log.info("Transfer failed: user have no account with id: " + request.getToAccountId());
+                        ThreadContext.clearAll();
+                        notificationService.send("У Вас нет такого счета");
+                        return new ResponseStatusException(HttpStatus.NOT_FOUND, "exchange failed");
+                    });
+
+            Double toAmount = getConvertedAmount(fromCurrency, toCurrency, request.getAmount(),
+                    request.getFromAccountId().toString(), request.getToAccountId().toString());
+
+            return transfer(request.getFromAccountId(), request.getToAccountId(), request.getAmount(), toAmount, token);
+        } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Self transfer error.");
+            ThreadContext.clearAll();
+            recordFailedTransfer(request.getFromAccountId().toString(), request.getToAccountId().toString());
+            return false;
         }
-
-        Double toAmount = getConvertedAmount(fromCurrency, request.getToCurrency(), request.getAmount());
-
-        return transfer(request.getFromAccountId(), toAccountId, request.getAmount(), toAmount, token);
     }
 
+    public boolean externalTransfer(ExternalTransferRequest request) {
+        try {
+            String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
 
-//    // TODO удалить токены
-//
-//    private boolean transfer(Long fromAccountId,
-//                             Long toAccountId,
-//                             Double fromAmount,
-//                             Double toAmount,
-//                             String token) {
-//        CashRequest withdrawRequest = new CashRequest(fromAmount);
-//        try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.set("Authorization", "Bearer " + token);
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            HttpEntity<CashRequest> entity = new HttpEntity<>(withdrawRequest, headers);
-//            restTemplate.exchange("http://account/accounts/" + fromAccountId + "/withdraw",
-//                            HttpMethod.POST,
-//                            entity,
-//                            Boolean.class)
-//                    .getBody();
-//        } catch (Exception e) {
-//            notificationService.send("Ошибка перевода.");
-//            throw new InternalServerErrorException();
-//        }
-//        try {
-//            CashRequest topUpRequest = new CashRequest(toAmount);
-////            if (requestDto.getTransferRequest().getUserId() == null) {
-////            HttpHeaders headers = new HttpHeaders();
-////            headers.set("Authorization", "Bearer " + requestDto.getToken());
-////            headers.setContentType(MediaType.APPLICATION_JSON);
-////
-////                HttpEntity<CashRequest> entity = new HttpEntity<>(topUpRequest, headers);
-////                restTemplate.exchange("http://account/accounts/" + requestDto.getTransferRequest().getToAccountId() + "/top-up",
-////                                HttpMethod.POST,
-////                                entity,
-////                                Boolean.class)
-////                        .getBody();
-////            }
-////            else {
-//            // TODO убрать headers
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.set("Authorization", "Bearer " + token);
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            HttpEntity<CashRequest> entity = new HttpEntity<>(topUpRequest, headers);
-//            restTemplate.exchange("http://account/accounts/" + toAccountId + "/top-up",
-//                            HttpMethod.POST,
-//                            entity,
-//                            Boolean.class)
-//                    .getBody();
-////            }
-//        } catch (Exception e) {
-//            // TODO убрать headers
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.set("Authorization", "Bearer " + token);
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//            HttpEntity<CashRequest> entity = new HttpEntity<>(withdrawRequest, headers);
-//            restTemplate.exchange("http://account/accounts/" + fromAccountId + "/top-up",
-//                            HttpMethod.POST,
-//                            entity,
-//                            Boolean.class)
-//                    .getBody();
-//            throw new InternalServerErrorException();
-//        }
-//        return true;
-//    }
-//
-//    private Double getConvertedAmount(Currency fromCurrency, Currency toCurrency, Double amount){
-//
-//        Map<String, Object> params = Map.of(
-//                "from", fromCurrency,
-//                "to", toCurrency,
-//                "amount", amount
-//        );
-//
-//        Double toAmount;
-//        try {
-//            ExchangeResponse rateInfo = restTemplate.exchange("http://exchange/rate/convert?from={from}&to={to}&amount={amount}",
-//                    HttpMethod.GET,
-//                    null,
-//                    ExchangeResponse.class,
-//                    params).getBody();
-//            toAmount = rateInfo.getValue();
-//        } catch (Exception e) {
-//            notificationService.send("Ошибка перевода.");
-//            throw new InternalServerErrorException();
-//        }
-//        return toAmount;
-//    }
-//
-//    public boolean selfTransfer(SelfTransferRequest selfTransferRequest) {
-//
-//        if (blockerService.checkSuspicious()) {
-//            notificationService.send("Подозрительная операция заблокирована.");
-//            return false;
-//        }
-//
-//        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Authorization", "Bearer " + token);
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<Object> entity = new HttpEntity<>(headers);
-//        List<Account> accounts = List.of(restTemplate.exchange("http://account/accounts/",
-//                        HttpMethod.GET,
-//                        entity,
-//                        Account[].class)
-//                .getBody());
-//
-//        Currency fromCurrency = accounts.stream()
-//                .filter(account -> Objects.equals(account.getId(), selfTransferRequest.getFromAccountId()))
-//                .findFirst()
-//                .map(Account::getCurrency)
-//                .orElseThrow(() -> {
-//                    notificationService.send("У Вас нет такого счета");
-//                    return new NotFoundException("У пользователя нет такого счета");
-//                });
-//
-//        Currency toCurrency = accounts.stream()
-//                .filter(account -> Objects.equals(account.getId(), selfTransferRequest.getToAccountId()))
-//                .findFirst()
-//                .map(Account::getCurrency)
-//                .orElseThrow(() -> {
-//                    notificationService.send("У Вас нет такого счета");
-//                    return new NotFoundException("У пользователя нет такого счета");
-//                });
-//
-//        Map<String, Object> params = Map.of(
-//                "from", fromCurrency,
-//                "to", toCurrency,
-//                "amount", selfTransferRequest.getAmount()
-//        );
-//
-//        Double toAmount = getConvertedAmount(fromCurrency, toCurrency, selfTransferRequest.getAmount());
-////        try {
-////            ExchangeResponse rateInfo = restTemplate.exchange("http://exchange/rate/convert?from={from}&to={to}&amount={amount}",
-////                    HttpMethod.GET,
-////                    null,
-////                    ExchangeResponse.class,
-////                    params).getBody();
-////            toAmount = rateInfo.getValue();
-////        } catch (Exception e) {
-////            notificationService.send("Ошибка перевода.");
-////            throw new InternalServerErrorException();
-////        }
-//
-//        return transfer(selfTransferRequest.getFromAccountId(),
-//                selfTransferRequest.getToAccountId(),
-//                selfTransferRequest.getAmount(),
-//                toAmount,
-//                token);
-//
-//    }
-//
-//
-//    public boolean externalTransfer(ExternalTransferRequest request) throws BadRequestException {
-//
-//        if (blockerService.checkSuspicious()) {
-//            notificationService.send("Подозрительная операция заблокирована.");
-//            return false;
-//        }
-//
-//        String token = SecurityContextHolder.getContext().getAuthentication().getDetails().toString();
-//
-//        Currency fromCurrency;
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.set("Authorization", "Bearer " + token);
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<Object> entity = new HttpEntity<>(headers);
-//
-//        List<Account> accounts = List.of(restTemplate.exchange("http://account/accounts/",
-//                        HttpMethod.GET,
-//                        entity,
-//                        Account[].class)
-//                .getBody());
-//
-//        fromCurrency = accounts.stream()
-//                .filter(account -> Objects.equals(account.getId(), request.getFromAccountId()))
-//                .findFirst()
-//                .map(Account::getCurrency)
-//                .orElseThrow(() -> {
-//                    notificationService.send("У Вас нет такого счета");
-//                    return new NotFoundException("У пользователя нет такого счета");
-//                });
-//
-//
-//        Map<String, Object> params = Map.of(
-//                "userId", request.getUserId(),
-//                "currency", request.getToCurrency()
-//        );
-//        Long toAccountId;
-//        try {
-//            toAccountId = restTemplate.exchange("http://account/accounts/findAccountId?userId={userId}&currency={currency}",
-//                            HttpMethod.GET,
-//                            entity,
-//                            Long.class,
-//                            params)
-//                    .getBody();
-//        } catch (Exception e) {
-//            notificationService.send("У получателя нет счета с такой валютой");
-//            throw new BadRequestException("У пользователя нет счета с такой валютой");
-//        }
-//
-//        params = Map.of(
-//                "from", fromCurrency,
-//                "to", request.getToCurrency(),
-//                "amount", request.getAmount()
-//        );
-//
-//        Double toAmount = getConvertedAmount(fromCurrency, request.getToCurrency(), request.getAmount());
-////        try {
-////            ExchangeResponse rateInfo = restTemplate.exchange("http://exchange/rate/convert?from={from}&to={to}&amount={amount}",
-////                    HttpMethod.GET,
-////                    null,
-////                    ExchangeResponse.class,
-////                    params).getBody();
-////            toAmount = rateInfo.getValue();
-////        } catch (Exception e) {
-////            notificationService.send("Ошибка перевода.");
-////            throw new InternalServerErrorException();
-////        }
-//
-//        return transfer(request.getFromAccountId(),
-//                toAccountId,
-//                request.getAmount(),
-//                toAmount,
-//                token);
-//    }
+            List<Account> accounts = getSelfAccounts();
 
+            Currency fromCurrency = getCurrencyOfAccountById(accounts, request.getFromAccountId());
 
+            Map<String, Object> params = Map.of(
+                    "userId", request.getUserId(),
+                    "currency", request.getToCurrency()
+            );
+
+            Long toAccountId;
+            try {
+                toAccountId = restTemplate.exchange(
+                                accountUri + "/accounts/findAccountId?userId={userId}&currency={currency}",
+                                HttpMethod.GET,
+                                new HttpEntity<>(new HttpHeaders() {{
+                                    set("Authorization", "Jwt " + token);
+                                    setContentType(MediaType.APPLICATION_JSON);
+                                }}),
+                                Long.class,
+                                params)
+                        .getBody();
+            } catch (Exception e) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Recipient has no account with such currency.");
+                ThreadContext.clearAll();
+                notificationService.send("У получателя нет счета с такой валютой");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "exchange failed");
+            }
+
+            if (blockerService.checkSuspicious()) {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Suspicious external transfer.");
+                ThreadContext.clearAll();
+                recordSuspiciousTransfer(request.getFromAccountId().toString(), toAccountId.toString());
+                notificationService.send("Подозрительная операция заблокирована.");
+                return false;
+            }
+
+            Double toAmount = getConvertedAmount(fromCurrency, request.getToCurrency(), request.getAmount(),
+                    request.getFromAccountId().toString(), toAccountId.toString());
+
+            return transfer(request.getFromAccountId(), toAccountId, request.getAmount(), toAmount, token);
+        } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("External transfer error.");
+            ThreadContext.clearAll();
+            recordFailedTransfer(request.getFromAccountId().toString(), request.getUserId().toString() + "_" + request.getToCurrency().toString());
+            return false;
+        }
+    }
 }

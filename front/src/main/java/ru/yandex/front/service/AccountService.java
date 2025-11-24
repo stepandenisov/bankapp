@@ -5,7 +5,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +33,11 @@ public class AccountService {
 
     @Value("${account.uri}")
     private String accountUri;
+
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+
+    private final Tracer tracer;
+
 
     public List<Account> getAccounts() {
         CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
@@ -58,6 +67,10 @@ public class AccountService {
         try {
             return protectedCall.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Cannot get users accounts");
+            ThreadContext.clearAll();
             return List.of();
         }
     }
@@ -89,6 +102,10 @@ public class AccountService {
         try {
             protectedCall.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Cannot add account for user");
+            ThreadContext.clearAll();
         }
     }
 
@@ -119,6 +136,10 @@ public class AccountService {
         try {
             protectedCall.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Cannot delete user's account: " + accountId.toString());
+            ThreadContext.clearAll();
         }
     }
 }

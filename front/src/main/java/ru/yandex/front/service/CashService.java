@@ -4,7 +4,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +32,10 @@ public class CashService {
 
     @Value("${cash.uri}")
     private String cashUri;
+
+    private static final Logger log = LoggerFactory.getLogger(CashService.class);
+
+    private final Tracer tracer;
 
     public void withdraw(Long accountId, Double volume) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("cashApi");
@@ -55,7 +63,15 @@ public class CashService {
 
         try {
             protectedCall.get();
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.debug("Withdraw success.");
+            ThreadContext.clearAll();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Cannot withdraw for user.");
+            ThreadContext.clearAll();
         }
     }
 
@@ -85,7 +101,15 @@ public class CashService {
 
         try {
             protectedCall.get();
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.debug("Top up success.");
+            ThreadContext.clearAll();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Cannot top up accounts");
+            ThreadContext.clearAll();
         }
     }
 

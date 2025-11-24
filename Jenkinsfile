@@ -18,7 +18,7 @@ pipeline {
         stage('Build Maven project') {
             steps {
                 script {
-                    run("mvn clean install")
+                    run("mvn clean install -DskipTests")
                 }
             }
         }
@@ -64,7 +64,7 @@ pipeline {
                             --from-literal=POSTGRES_DB=yandex \
                             --dry-run=client -o yaml | kubectl apply -f -
                         kubectl create configmap keycloak-realm \
-                            --from-file=realm-export.json=./keycloak.json -n ${NAMESPACE} \
+                            --from-file=realm-export.json=./realm-export.json -n ${NAMESPACE} \
                             --dry-run=client -o yaml | kubectl apply -f -
                     """)
                 }
@@ -103,6 +103,12 @@ pipeline {
                     run("""
                         helm upgrade --install config-server -f ./helm/bankapp/values-config-server.yaml ./helm/bankapp
                         helm upgrade --install keycloak -f ./helm/bankapp/values-keycloak.yaml ./helm/bankapp
+                        helm upgrade --install zipkin ./helm/zipkin
+                        helm upgrade --install elasticsearch ./helm/elasticsearch
+                        helm upgrade --install prometheus ./helm/prometheus
+                        helm upgrade --install grafana ./helm/grafana
+                        helm upgrade --install kibana ./helm/kibana
+                        helm upgrade --install logstash ./helm/logstash/
                         helm upgrade --install postgres -f ./helm/bankapp/values-postgres.yaml ./helm/bankapp
                         helm upgrade --install eureka -f ./helm/bankapp/values-eureka.yaml ./helm/bankapp
                         helm upgrade --install account -f ./helm/bankapp/values-account.yaml ./helm/bankapp

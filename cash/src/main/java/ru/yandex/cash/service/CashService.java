@@ -4,7 +4,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,9 +36,18 @@ public class CashService {
     @Value("${account.uri}")
     private String accountUri = "http://accounts/";
 
+    private static final Logger log = LoggerFactory.getLogger(CashService.class);
+
+    private final Tracer tracer;
+
+
     private boolean changeAccountReminder(String uri, CashRequest cashRequest) {
         if (blockerService.checkSuspicious()) {
             notificationService.send("Подозрительная операция заблокирована.");
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.info("Suspicious operation");
+            ThreadContext.clearAll();
             return false;
         }
 
@@ -57,15 +70,31 @@ public class CashService {
                     Retry.decorateSupplier(accountRetry, callSupplier));
             Boolean result = protectedCall.get();
             if (result){
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Operation complete.");
+                ThreadContext.clearAll();
                 notificationService.send("Операция выполнена.");
                 return true;
             } else {
+                ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                log.info("Operation failed.");
+                ThreadContext.clearAll();
                 notificationService.send("Операция не выполнена.");
                 return false;
             }
         } catch (HttpClientErrorException e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Microservice account not available");
+            ThreadContext.clearAll();
             return false;
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.error("Cash operation failed because of internal error");
+            ThreadContext.clearAll();
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
         }
     }

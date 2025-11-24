@@ -12,6 +12,7 @@ public class ScheduledDispatchService {
 
     private final DispatchService dispatchService;
 
+
     @Scheduled(fixedRate = 1000)
     public void sendExchangeRate() {
         dispatchService.sendExchangeRate();

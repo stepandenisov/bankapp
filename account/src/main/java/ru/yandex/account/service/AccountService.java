@@ -1,8 +1,12 @@
 package ru.yandex.account.service;
 
+import io.micrometer.tracing.Tracer;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,7 +27,11 @@ public class AccountService {
 
     private final UserService userService;
 
-    public boolean existsByAccountType(Currency currency){
+    private static final Logger log = LoggerFactory.getLogger(AccountService.class);
+
+    private final Tracer tracer;
+
+    public boolean existsByAccountType(Currency currency) {
         User user = userService.getCurrentUser();
         return accountRepository.existsByUserIdAndCurrency(user.getId(), currency);
     }
@@ -39,6 +47,10 @@ public class AccountService {
                 return false;
             }
         } else {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Attempt to delete someone else's account: user: " + user.getUsername() + ", accountId: " + accountId.toString());
+            ThreadContext.clearAll();
             throw new AccessDeniedException("Нет прав на удаление аккаунта с id " + accountId);
         }
     }
@@ -53,7 +65,7 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    public Long getAccountIdByCurrencyAndUserId(Currency currency, Long userId){
+    public Long getAccountIdByCurrencyAndUserId(Currency currency, Long userId) {
         return accountRepository.findByUserIdAndCurrency(userId, currency)
                 .map(Account::getId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
@@ -70,11 +82,21 @@ public class AccountService {
                     if (account.getReminder() >= amount) {
                         account.setReminder(account.getReminder() - amount);
                         accountRepository.save(account);
+                        ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                        ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                        log.debug("Withdraw success.");
+                        ThreadContext.clearAll();
                         return true;
                     }
                     return false;
                 })
-                .orElseThrow(() -> new AccessDeniedException("Нет доступа"));
+                .orElseThrow(() -> {
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.warn("Attempt to withdraw from else's account: user: " + user.getUsername() + ", accountId: " + accountId.toString());
+                    ThreadContext.clearAll();
+                    return new AccessDeniedException("Нет доступа");
+                });
     }
 
     public boolean topUp(Long accountId, Double amount) throws AccessDeniedException {
@@ -82,6 +104,10 @@ public class AccountService {
                 .map(account -> {
                     account.setReminder(account.getReminder() + amount);
                     accountRepository.save(account);
+                    ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+                    ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+                    log.debug("Top up success.");
+                    ThreadContext.clearAll();
                     return true;
                 })
                 .orElseThrow(() -> new AccessDeniedException("Нет доступа"));

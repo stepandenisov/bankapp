@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,9 @@ class TransferServiceUnitTest {
     @Mock
     private Authentication authentication;
 
+    @Mock
+    private Tracer tracer;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -64,6 +68,9 @@ class TransferServiceUnitTest {
         retry = Retry.ofDefaults("blockerApi");
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(circuitBreaker);
         when(retryRegistry.retry(anyString())).thenReturn(retry);
+
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
 
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);

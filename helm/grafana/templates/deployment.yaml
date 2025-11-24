@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: bankapp
+  labels:
+    app: grafana
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "{{ .Values.adminUser }}"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "{{ .Values.adminPassword }}"
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/provisioning"
+            - name: GF_DASHBOARDS_JSON_ENABLED
+              value: "true"
+            - name: GF_DASHBOARDS_JSON_PATHS
+              value: "/var/lib/grafana/dashboards"
+          volumeMounts:
+            - name: provisioning
+              mountPath: /etc/grafana/provisioning
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: provisioning
+          configMap:
+            name: grafana-config
+            items:
+              - key: prometheus-datasource.yaml
+                path: datasources/prometheus.yaml
+              - key: dashboards-provider.yaml
+                path: dashboards/dashboards.yaml
+        - name: dashboards
+          configMap:
+            name: grafana-config
+            items:
+              - key: microservices.json
+                path: microservices.json

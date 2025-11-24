@@ -4,7 +4,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +31,9 @@ public class UserService {
     @Value("${account.uri}")
     private String accountUri;
 
+    private static final Logger log = LoggerFactory.getLogger(TransferService.class);
+
+    private final Tracer tracer;
 
     public void editPassword(EditPasswordRequest request) {
         CircuitBreaker cb = cbRegistry.circuitBreaker("accountApi");
@@ -48,7 +55,15 @@ public class UserService {
 
         try {
             protectedCall.get();
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.debug("User password edited.");
+            ThreadContext.clearAll();
         } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Error change password.");
+            ThreadContext.clearAll();
         }
     }
 
@@ -72,7 +87,15 @@ public class UserService {
 
         try {
             protectedCall.get();
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.debug("User info edited.");
+            ThreadContext.clearAll();
         } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Error change info.");
+            ThreadContext.clearAll();
         }
     }
 
@@ -92,6 +115,10 @@ public class UserService {
         try {
             protectedCall.get();
         } catch (Exception ignored) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Error register.");
+            ThreadContext.clearAll();
         }
     }
 
@@ -116,6 +143,10 @@ public class UserService {
         try {
             return protectedCall.get();
         } catch (Exception e) {
+            ThreadContext.put("traceId", tracer.currentSpan().context().traceId());
+            ThreadContext.put("spanId", tracer.currentSpan().context().spanId());
+            log.warn("Error get other users.");
+            ThreadContext.clearAll();
             return List.of();
         }
     }

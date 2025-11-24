@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,8 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class BlockerServiceUnitTest {
 
@@ -36,6 +36,9 @@ class BlockerServiceUnitTest {
     private CircuitBreaker circuitBreaker;
     private Retry retry;
 
+    @Mock
+    private Tracer tracer;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -44,7 +47,10 @@ class BlockerServiceUnitTest {
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(circuitBreaker);
         when(retryRegistry.retry(anyString())).thenReturn(retry);
 
-        blockerService = new BlockerService(restTemplate, cbRegistry, retryRegistry);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
+
+        blockerService = new BlockerService(restTemplate, cbRegistry, retryRegistry, tracer);
         try {
             var field = BlockerService.class.getDeclaredField("blockerUri");
             field.setAccessible(true);

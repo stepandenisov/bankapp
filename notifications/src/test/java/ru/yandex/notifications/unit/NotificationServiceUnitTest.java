@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,9 @@ class NotificationServiceUnitTest {
     @Mock
     private Retry retry;
 
+    @Mock
+    private Tracer tracer;
+
     @InjectMocks
     private NotificationService notificationService;
 
@@ -43,6 +47,8 @@ class NotificationServiceUnitTest {
     void setUp() {
 
         MockitoAnnotations.openMocks(this);
+        when(tracer.currentSpan().context().traceId()).thenReturn("");
+        when(tracer.currentSpan().context().spanId()).thenReturn("");
         circuitBreaker = CircuitBreaker.ofDefaults("frontApi");
         retry = Retry.ofDefaults("frontApi");
         when(cbRegistry.circuitBreaker(anyString())).thenReturn(circuitBreaker);

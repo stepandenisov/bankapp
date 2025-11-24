@@ -1,5 +1,6 @@
 package ru.yandex.account.unit.controller;
 
+import io.micrometer.tracing.Tracer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,6 +16,7 @@ import ru.yandex.account.controller.AuthController;
 import ru.yandex.account.model.dto.LoginRequest;
 import ru.yandex.account.model.dto.RegisterRequest;
 import ru.yandex.account.model.dto.TokenResponse;
+import ru.yandex.account.service.AuthService;
 import ru.yandex.account.service.JwtService;
 import ru.yandex.account.service.UserService;
 
@@ -30,12 +32,15 @@ class AuthControllerUnitTest {
     private UserService userService;
     private AuthController authController;
 
+    private AuthService authService;
+
     @BeforeEach
     void setUp() {
         authenticationManager = mock(AuthenticationManager.class);
         jwtService = mock(JwtService.class);
         userService = mock(UserService.class);
-        authController = new AuthController(authenticationManager, jwtService, userService);
+        authService = mock(AuthService.class);
+        authController = new AuthController(authenticationManager, jwtService, userService, authService);
     }
 
     @Test

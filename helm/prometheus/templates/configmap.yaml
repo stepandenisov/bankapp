@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: bankapp
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+{{ .Files.Get "files/prometheus.yml" | indent 4 }}
+  alert.rules.yml: |
+{{ .Files.Get "files/alert.rules.yml" | indent 4 }}
