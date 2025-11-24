@@ -19,12 +19,3 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 9411
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 9411
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 9411
-          resources: {{ toYaml .Values.resources | nindent 12 }}
