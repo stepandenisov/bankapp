@@ -28,22 +28,15 @@
     </Appenders>
 
     <Loggers>
-        <Logger name="org.apache.kafka" level="info" additivity="false">
-            <AppenderRef ref="Console"/>
-        </Logger>
-
-        <Logger name="com.netflix.discovery" level="info" additivity="false">
-            <AppenderRef ref="Console"/>
-        </Logger>
-
-        <Logger name="ru.yandex.exchange_generator" level="info" additivity="false">
-            <AppenderRef ref="KafkaAppender"/>
+        <Logger name="org.apache.kafka" level="WARN" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
 
         <Root level="info">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="Kafka"/>
         </Root>
+
     </Loggers>
 
 
